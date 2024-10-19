@@ -1,0 +1,14 @@
+{
+  "properties": [
+    {
+      "name": "custom.admin.username",
+      "type": "java.lang.String",
+      "description": "Admin username."
+    },
+    {
+      "name": "custom.admin.password",
+      "type": "java.lang.String",
+      "description": "Admin password."
+    }
+  ]
+}
