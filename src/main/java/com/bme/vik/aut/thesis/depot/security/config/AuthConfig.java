@@ -2,6 +2,7 @@ package com.bme.vik.aut.thesis.depot.security.config;
 
 import com.bme.vik.aut.thesis.depot.general.user.UserRepository;
 import com.bme.vik.aut.thesis.depot.security.jwt.JwtAuthFilter;
+import com.bme.vik.aut.thesis.depot.security.jwt.JwtTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,9 +19,9 @@ import java.util.logging.Logger;
 
 @Configuration
 @RequiredArgsConstructor
-public class DepotConfig {
+public class AuthConfig {
 
-    private static final Logger logger = Logger.getLogger(DepotConfig .class.getName());
+    private static final Logger logger = Logger.getLogger(AuthConfig.class.getName());
     private final UserRepository userRepository;
     @Bean
     public UserDetailsService userDetailsService() {
@@ -50,5 +51,15 @@ public class DepotConfig {
     public PasswordEncoder passwordEncoder() {
         logger.info("Creating password encoder");
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public JwtTokenService jwtTokenService() {
+        return new JwtTokenService();
+    }
+
+    @Bean
+    public JwtAuthFilter jwtAuthFilter() {
+        return new JwtAuthFilter(jwtTokenService(), userDetailsService());
     }
 }
