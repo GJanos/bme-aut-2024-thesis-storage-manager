@@ -17,6 +17,7 @@ class MyUserTest {
 
     @BeforeEach
     void setUp() {
+        //***** <-- given: Create user under test --> *****//
         user = new MyUser();
     }
 
@@ -84,7 +85,10 @@ class MyUserTest {
 
     @Test
     void shouldSetCreatedAtWhenOnCreateCalled() {
+        //***** <-- when: Call onCreate method --> *****//
         user.onCreate();
+
+        //***** <-- then: Verify createdAt and updatedAt are set and equal --> *****//
         assertNotNull(user.getCreatedAt());
         assertNotNull(user.getUpdatedAt());
 
@@ -92,23 +96,30 @@ class MyUserTest {
         LocalDateTime createdAtTruncated = user.getCreatedAt().truncatedTo(ChronoUnit.MILLIS);
         LocalDateTime updatedAtTruncated = user.getUpdatedAt().truncatedTo(ChronoUnit.MILLIS);
 
-        // On creation, both timestamps should be equal
         assertEquals(createdAtTruncated, updatedAtTruncated);
     }
 
     @Test
     void shouldSetUpdatedAtWhenOnUpdateCalled() {
+        //***** <-- when: Set initial createdAt time --> *****//
         LocalDateTime initialCreatedAt = LocalDateTime.now().minusDays(1);
         user.setCreatedAt(initialCreatedAt);
         user.onUpdate();
+
+        //***** <-- then: Verify updatedAt is set and after createdAt --> *****//
         assertNotNull(user.getUpdatedAt());
-        assertTrue(user.getUpdatedAt().isAfter(user.getCreatedAt())); // Updated time should be after created time
+        assertTrue(user.getUpdatedAt().isAfter(user.getCreatedAt()));
     }
 
     @Test
     void shouldReturn5AuthoritiesWhenRoleIsUser() {
+        //***** <-- given --> *****//
         user.setRole(Role.USER);
+
+        //***** <-- when --> *****//
         Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
+
+        //***** <-- then: Verify authorities --> *****//
         // 4 User permissions + 1 Role
         assertEquals(5, authorities.size());
         assertTrue(authorities.contains(new SimpleGrantedAuthority("ROLE_USER")));
@@ -116,8 +127,13 @@ class MyUserTest {
 
     @Test
     void shouldReturn9AuthoritiesWhenRoleIsSupplier() {
+        //***** <-- given --> *****//
         user.setRole(Role.SUPPLIER);
+
+        //***** <-- when --> *****//
         Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
+
+        //***** <-- then: Verify authorities --> *****//
         // 4 User permissions + 4 Supplier permissions + 1 Role
         assertEquals(9, authorities.size());
         assertTrue(authorities.contains(new SimpleGrantedAuthority("ROLE_SUPPLIER")));
@@ -125,11 +141,15 @@ class MyUserTest {
 
     @Test
     void shouldReturn13AuthoritiesWhenRoleIsAdmin() {
+        //***** <-- given --> *****//
         user.setRole(Role.ADMIN);
+
+        //***** <-- when --> *****//
         Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
+
+        //***** <-- then: Verify authorities --> *****//
         // 4 User permissions + 4 Supplier permissions + 4 Admin permissions + 1 Role
         assertEquals(13, authorities.size());
         assertTrue(authorities.contains(new SimpleGrantedAuthority("ROLE_ADMIN")));
     }
-
 }

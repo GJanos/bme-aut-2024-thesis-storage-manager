@@ -2,6 +2,8 @@ package com.bme.vik.aut.thesis.depot.general.user;
 
 import com.bme.vik.aut.thesis.depot.security.user.MyUser;
 import com.bme.vik.aut.thesis.depot.AbstractTestcontainersTest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -12,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -20,10 +23,12 @@ import java.util.Optional;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @DataJpaTest
-@Testcontainers
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+//@Testcontainers
+//@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@ActiveProfiles("test")
 //@SpringJUnitConfig(UserRepositoryTest.TestConfig.class)
-class UserRepositoryTest extends AbstractTestcontainersTest {
+class UserRepositoryTest {
 
 //    @TestConfiguration
 //    static class TestConfig {
@@ -41,30 +46,40 @@ class UserRepositoryTest extends AbstractTestcontainersTest {
     @Autowired
     private UserRepository userRepository;
 
-    @Test
-    void shouldReturnUserWhenFoundByUserName() {
+    private final static String USER_NAME = "depotuser";
+    private final static String USER_PASSWORD = "depotuser";
+
+    @BeforeEach
+    void setUp() {
         //***** <-- given --> *****//
-        String userName = "depotuser";
-        String password = "depotpassword";
         MyUser user = MyUser.builder()
-                .userName(userName)
-                .password(password)
+                .userName(USER_NAME)
+                .password(USER_PASSWORD)
                 .build();
         userRepository.save(user);
+    }
 
+    @AfterEach
+    void tearDown() {
+        userRepository.deleteAll();
+    }
+
+    @Test
+    void shouldReturnUserWhenFoundByUserName() {
         //***** <-- when --> *****//
-        Optional<MyUser> userFound = userRepository.findByUserName(userName);
+        Optional<MyUser> userFound = userRepository.findByUserName(USER_NAME);
 
         //***** <-- then --> *****//
         assertThat(userFound).isPresent();
-        assertThat(userFound.get().getUsername()).isEqualTo(userName);
-        assertThat(userFound.get().getPassword()).isEqualTo(password);
+        assertThat(userFound.get().getUsername()).isEqualTo(USER_NAME);
+        assertThat(userFound.get().getPassword()).isEqualTo(USER_PASSWORD);
     }
 
     @Test
     void shouldNotReturnUserWhenNotFoundByUserName() {
         //***** <-- when --> *****//
-        Optional<MyUser> userFound = userRepository.findByUserName("nonexistentdepotus");
+        String userName = "nonexistentdepotuser";
+        Optional<MyUser> userFound = userRepository.findByUserName(userName);
 
         //***** <-- then --> *****//
         assertThat(userFound).isNotPresent();
@@ -72,17 +87,8 @@ class UserRepositoryTest extends AbstractTestcontainersTest {
 
     @Test
     void shouldReturnTrueWhenUserExistsByUserName() {
-        //***** <-- given --> *****//
-        String userName = "depotuser";
-        String password = "depotpassword";
-        MyUser user = MyUser.builder()
-                .userName(userName)
-                .password(password)
-                .build();
-        userRepository.save(user);
-
         //***** <-- when --> *****//
-        boolean exists = userRepository.existsByUserName(userName);
+        boolean exists = userRepository.existsByUserName(USER_NAME);
 
         //***** <-- then --> *****//
         assertThat(exists).isTrue();
@@ -91,7 +97,8 @@ class UserRepositoryTest extends AbstractTestcontainersTest {
     @Test
     void shouldReturnFalseWhenUserDoesNotExistByUserName() {
         //***** <-- when --> *****//
-        boolean exists = userRepository.existsByUserName("nonexistentdepotuser");
+        String userName = "nonexistentdepotuser";
+        boolean exists = userRepository.existsByUserName(userName);
 
         //***** <-- then --> *****//
         assertThat(exists).isFalse();

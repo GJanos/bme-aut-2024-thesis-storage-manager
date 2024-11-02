@@ -51,7 +51,7 @@ public class InfoController {
             @Parameter(description = "Authentication object that holds the authenticated user's details", required = true)
             Authentication authentication) throws UserNotFoundByIDException {
 
-        UserResponse userResponse = infoService.getCurrentUserInfo(authentication.getName());
+        UserResponse userResponse = infoService.getUserInfoByName(authentication.getName());
         return ResponseEntity.ok(userResponse);
     }
 }

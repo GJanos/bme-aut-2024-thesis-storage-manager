@@ -66,7 +66,6 @@ public class UserServiceImpl implements UserService {
 
         user.setUserName(request.getUserName());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setUpdatedAt(LocalDateTime.now());
         user = userRepository.save(user);
 
         logger.info("User with ID {} updated successfully", id);

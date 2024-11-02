@@ -29,14 +29,6 @@ public class Supplier {
     @JoinColumn(name = "inventory_id", nullable = false)
     private Inventory inventory;
 
-    private int lowStockAlertThreshold;
-
-    private int expiryAlertThreshold;
-
-    private int reorderThreshold;
-
-    private int reorderQuantity;
-
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;
