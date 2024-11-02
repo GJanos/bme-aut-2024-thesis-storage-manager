@@ -25,6 +25,9 @@ public class SecurityConfig {
 
     private static final String[] WHITE_LIST_URL = {
             "/auth/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/v3/api-docs/**"
     };
 
     private final JwtAuthFilter jwtAuthFilter;
@@ -34,7 +37,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf().disable()
+                .csrf().disable() // should be enabled if I had frontend
                 .cors().disable()
                 .authorizeHttpRequests(req ->
                         req.requestMatchers(WHITE_LIST_URL)
@@ -56,5 +59,4 @@ public class SecurityConfig {
 
         return http.build();
     }
-
 }

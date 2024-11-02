@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,11 +21,11 @@ public class InfoServiceImpl implements InfoService {
     private final ModelMapper modelMapper;
 
     @Override
-    public UserResponse getCurrentUserInfo(String username) throws UserNotFoundByIDException {
+    public UserResponse getUserInfoByName(String username) throws UsernameNotFoundException {
         logger.info("Fetching user info for username: {}", username);
 
         MyUser user = userRepository.findByUserName(username)
-                .orElseThrow(() -> new UserNotFoundByIDException("User not found with username: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
 
         logger.info("User info fetched successfully for username: {}", username);
         return modelMapper.map(user, UserResponse.class);

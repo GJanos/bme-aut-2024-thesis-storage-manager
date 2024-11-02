@@ -34,3 +34,4 @@ build/
 ### Own ###
 .env
 todo.md
+.run/

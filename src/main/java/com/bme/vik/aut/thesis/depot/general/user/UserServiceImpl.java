@@ -1,6 +1,6 @@
 package com.bme.vik.aut.thesis.depot.general.user;
 
-import com.bme.vik.aut.thesis.depot.exception.UserNameAlreadyExistsError;
+import com.bme.vik.aut.thesis.depot.exception.UserNameAlreadyExistsException;
 import com.bme.vik.aut.thesis.depot.exception.UserNotFoundByIDException;
 import com.bme.vik.aut.thesis.depot.general.user.dto.UserModifyRequest;
 import com.bme.vik.aut.thesis.depot.general.user.dto.UserResponse;
@@ -61,12 +61,11 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByUserName(request.getUserName()) &&
                 !user.getUsername().equals(request.getUserName())) {
             logger.warn("Username {} already exists", request.getUserName());
-            throw new UserNameAlreadyExistsError("User name already exists");
+            throw new UserNameAlreadyExistsException("User name already exists");
         }
 
         user.setUserName(request.getUserName());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setUpdatedAt(LocalDateTime.now());
         user = userRepository.save(user);
 
         logger.info("User with ID {} updated successfully", id);

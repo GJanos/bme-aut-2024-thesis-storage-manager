@@ -1,11 +1,19 @@
+#logging:
+#  level:
+#    ROOT: DEBUG
+
 spring:
   application:
     name: depot
   datasource:
-    url: jdbc:postgresql://localhost:5432/mydatabase
-    username: myuser
-    password: secret
     driverClassName: org.postgresql.Driver
+    hikari:
+      minimum-idle: 2
+      maximum-pool-size: 5
+      validation-timeout: 300000
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
   jpa:
     database: POSTGRESQL
     show-sql: true
@@ -18,10 +26,12 @@ spring:
 application:
   security:
     jwt:
-      secret-key: ${JWT_SECRET_KEY}
       expiration: 86400000  # 1 day in milliseconds
 
-custom:
-  admin:
-    username: ${ADMIN_USERNAME}
-    password: ${ADMIN_PASSWORD}
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  api-docs:
+    enabled: true
+    path: /v3/api-docs

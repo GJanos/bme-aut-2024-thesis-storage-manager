@@ -36,6 +36,9 @@
         <testcontainers.version>1.20.1</testcontainers.version>
         <lombok.version>1.18.30</lombok.version>
         <spring.security.test.version>6.3.0</spring.security.test.version> <!-- Spring Security Test Version -->
+        <openapi.version>2.6.0</openapi.version>
+        <spring.boot.starter.webflux.version>3.3.4</spring.boot.starter.webflux.version>
+        <h2db.version>2.3.230</h2db.version>
     </properties>
 
     <dependencies>
@@ -130,14 +133,26 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-testcontainers</artifactId>
-            <version>${spring.boot.version}</version>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+            <version>${spring.boot.starter.webflux.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>${h2db.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
             <version>${spring.security.test.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <version>${spring.boot.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -151,6 +166,13 @@
             <artifactId>postgresql</artifactId>
             <version>${testcontainers.version}</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- API Documentation Dependencies -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${openapi.version}</version>
         </dependency>
     </dependencies>
 

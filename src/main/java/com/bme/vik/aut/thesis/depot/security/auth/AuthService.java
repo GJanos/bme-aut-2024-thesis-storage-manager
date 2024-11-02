@@ -1,6 +1,7 @@
 package com.bme.vik.aut.thesis.depot.security.auth;
 
-import com.bme.vik.aut.thesis.depot.exception.UserNameAlreadyExistsError;
+import com.bme.vik.aut.thesis.depot.exception.UserNameAlreadyExistsException;
+import com.bme.vik.aut.thesis.depot.exception.UserNameOrPasswordIsEmptyException;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.AuthRequest;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.AuthResponse;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.RegisterRequest;
@@ -11,6 +12,7 @@ import com.bme.vik.aut.thesis.depot.general.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -31,9 +33,14 @@ public class AuthService {
     public AuthResponse register(RegisterRequest request) {
         logger.info("Attempting to register user: {}", request.getUserName());
 
-        if (userRepository.findByUserName(request.getUserName()).isPresent()) {
+        if (request.getUserName().isEmpty() || request.getPassword().isEmpty()) {
+            logger.warn("Username or password is empty");
+            throw new UserNameOrPasswordIsEmptyException("Username or password is empty");
+        }
+
+        if (userRepository.existsByUserName(request.getUserName())) {
             logger.warn("Username {} already exists", request.getUserName());
-            throw new IllegalArgumentException("Username already exists");
+            throw new UserNameAlreadyExistsException("Username already exists");
         }
 
         var user = MyUser.builder()
@@ -55,23 +62,17 @@ public class AuthService {
     public AuthResponse authenticate(AuthRequest request) {
         logger.info("Authenticating user: {}", request.getUserName());
 
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getUserName(),
-                            request.getPassword()
-                    )
-            );
-            logger.info("Authentication successful for user: {}", request.getUserName());
-        } catch (Exception e) {
-            logger.error("Authentication failed for user: {}", request.getUserName(), e);
-            throw e;
-        }
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getUserName(),
+                        request.getPassword()
+                )
+        );
 
         var user = userRepository.findByUserName(request.getUserName())
                 .orElseThrow(() -> {
                     logger.warn("User with username {} not found", request.getUserName());
-                    return new UserNameAlreadyExistsError("User not found");
+                    return new UsernameNotFoundException("User not found");
                 });
 
         var jwtToken = jwtTokenService.generateToken(user);
