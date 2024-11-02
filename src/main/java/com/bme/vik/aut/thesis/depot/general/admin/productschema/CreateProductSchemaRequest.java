@@ -1,4 +1,4 @@
-package com.bme.vik.aut.thesis.depot.general.admin.dto;
+package com.bme.vik.aut.thesis.depot.general.admin.productschema;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

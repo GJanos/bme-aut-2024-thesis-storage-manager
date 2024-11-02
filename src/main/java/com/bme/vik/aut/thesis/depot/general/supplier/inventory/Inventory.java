@@ -1,7 +1,8 @@
-package com.bme.vik.aut.thesis.depot.general.supplier;
+package com.bme.vik.aut.thesis.depot.general.supplier.inventory;
 
-import com.bme.vik.aut.thesis.depot.general.admin.Product;
-import com.bme.vik.aut.thesis.depot.general.admin.ProductSchema;
+import com.bme.vik.aut.thesis.depot.general.supplier.product.Product;
+import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchema;
+import com.bme.vik.aut.thesis.depot.general.supplier.supplier.Supplier;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

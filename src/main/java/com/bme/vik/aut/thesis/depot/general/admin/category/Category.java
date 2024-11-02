@@ -1,4 +1,4 @@
-package com.bme.vik.aut.thesis.depot.general.supplier;
+package com.bme.vik.aut.thesis.depot.general.admin.category;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Supplier {
+public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,12 +23,9 @@ public class Supplier {
 
     private String name;
 
-    private String email;
+    private String description;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "inventory_id", nullable = false)
-    private Inventory inventory;
-
+    //TODO check creation and update timestamp in tests
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;

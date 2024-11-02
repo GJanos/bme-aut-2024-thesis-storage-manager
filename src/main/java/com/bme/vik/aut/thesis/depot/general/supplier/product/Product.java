@@ -1,5 +1,6 @@
-package com.bme.vik.aut.thesis.depot.general.admin;
+package com.bme.vik.aut.thesis.depot.general.supplier.product;
 
+import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchema;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,15 +16,22 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Category {
+public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    @ManyToOne
+    @JoinColumn(name = "schema_id", nullable = false)
+    private ProductSchema schema;
 
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    private ProductStatus status;
+
+    private LocalDateTime expiresAt;
 
     @Column(nullable = false, updatable = false)
     @CreationTimestamp

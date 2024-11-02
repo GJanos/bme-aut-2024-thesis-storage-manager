@@ -1,7 +1,7 @@
 package com.bme.vik.aut.thesis.depot.security.auth;
 
-import com.bme.vik.aut.thesis.depot.exception.UserNameAlreadyExistsException;
-import com.bme.vik.aut.thesis.depot.exception.UserNameOrPasswordIsEmptyException;
+import com.bme.vik.aut.thesis.depot.exception.user.UserNameAlreadyExistsException;
+import com.bme.vik.aut.thesis.depot.exception.user.UserNameOrPasswordIsEmptyException;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.AuthRequest;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.AuthResponse;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.RegisterRequest;

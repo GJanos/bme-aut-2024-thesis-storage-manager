@@ -1,7 +1,7 @@
 package com.bme.vik.aut.thesis.depot.general.user;
 
-import com.bme.vik.aut.thesis.depot.exception.UserNameAlreadyExistsException;
-import com.bme.vik.aut.thesis.depot.exception.UserNotFoundByIDException;
+import com.bme.vik.aut.thesis.depot.exception.user.UserNameAlreadyExistsException;
+import com.bme.vik.aut.thesis.depot.exception.user.UserNotFoundByIDException;
 import com.bme.vik.aut.thesis.depot.general.user.dto.UserModifyRequest;
 import com.bme.vik.aut.thesis.depot.general.user.dto.UserResponse;
 import com.bme.vik.aut.thesis.depot.security.user.MyUser;
@@ -10,7 +10,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

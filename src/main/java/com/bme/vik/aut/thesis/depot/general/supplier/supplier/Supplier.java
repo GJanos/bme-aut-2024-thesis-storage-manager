@@ -1,5 +1,6 @@
-package com.bme.vik.aut.thesis.depot.general.admin;
+package com.bme.vik.aut.thesis.depot.general.supplier.supplier;
 
+import com.bme.vik.aut.thesis.depot.general.supplier.inventory.Inventory;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,14 +10,13 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductSchema {
+public class Supplier {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,12 +24,11 @@ public class ProductSchema {
 
     private String name;
 
-    private double storageSpaceNeeded; // Space needed in the inventory
+    private String email;
 
-    @ElementCollection
-    @CollectionTable(name = "product_category_mapping", joinColumns = @JoinColumn(name = "product_schema_id"))
-    @Column(name = "category_id")
-    private List<Long> categoryIDs;
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "inventory_id", nullable = false)
+    private Inventory inventory;
 
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
@@ -38,4 +37,3 @@ public class ProductSchema {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 }
-

@@ -1,7 +1,7 @@
 package com.bme.vik.aut.thesis.depot.security.auth;
 
-import com.bme.vik.aut.thesis.depot.exception.UserNameAlreadyExistsException;
-import com.bme.vik.aut.thesis.depot.exception.UserNameOrPasswordIsEmptyException;
+import com.bme.vik.aut.thesis.depot.exception.user.UserNameAlreadyExistsException;
+import com.bme.vik.aut.thesis.depot.exception.user.UserNameOrPasswordIsEmptyException;
 import com.bme.vik.aut.thesis.depot.general.user.UserRepository;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.AuthRequest;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.AuthResponse;
@@ -9,8 +9,6 @@ import com.bme.vik.aut.thesis.depot.security.auth.dto.RegisterRequest;
 import com.bme.vik.aut.thesis.depot.security.jwt.JwtTokenService;
 import com.bme.vik.aut.thesis.depot.security.user.MyUser;
 import com.bme.vik.aut.thesis.depot.security.user.Role;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,7 +22,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
