@@ -2,6 +2,9 @@ package com.bme.vik.aut.thesis.depot.exception;
 
 import com.bme.vik.aut.thesis.depot.exception.category.CategoryAlreadyExistsException;
 import com.bme.vik.aut.thesis.depot.exception.category.CategoryNotFoundException;
+import com.bme.vik.aut.thesis.depot.exception.productschema.NonGreaterThanZeroStorageSpaceException;
+import com.bme.vik.aut.thesis.depot.exception.productschema.ProductSchemaAlreadyExistsException;
+import com.bme.vik.aut.thesis.depot.exception.productschema.ProductSchemaNotFoundException;
 import com.bme.vik.aut.thesis.depot.exception.user.UserNameAlreadyExistsException;
 import com.bme.vik.aut.thesis.depot.exception.user.UserNotFoundByIDException;
 import org.springframework.http.HttpStatus;
@@ -18,6 +21,9 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    /*******************************/
+    /***** CATEGORY EXCEPTIONS *****/
+    /*******************************/
     @ExceptionHandler(CategoryAlreadyExistsException.class)
     public ResponseEntity<Map<String, String>> handleCategoryAlreadyExistsException(CategoryAlreadyExistsException ex) {
         Map<String, String> errorResponse = new HashMap<>();
@@ -32,6 +38,33 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
+    /*************************************/
+    /***** PRODUCT SCHEMA EXCEPTIONS *****/
+    /*************************************/
+    @ExceptionHandler(ProductSchemaAlreadyExistsException.class)
+    public ResponseEntity<Map<String, String>> handleProductSchemaAlreadyExistsException(ProductSchemaAlreadyExistsException ex) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(ProductSchemaNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleProductSchemaNotFoundException(ProductSchemaNotFoundException ex) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(NonGreaterThanZeroStorageSpaceException.class)
+    public ResponseEntity<Map<String, String>> handleNonGreaterThanZeroStorageSpaceException(NonGreaterThanZeroStorageSpaceException ex) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    /*******************************/
+    /***** USER EXCEPTIONS *********/
+    /*******************************/
     @ExceptionHandler(UserNotFoundByIDException.class)
     public ResponseEntity<Map<String, String>> handleUserNotFoundByIDException(UserNotFoundByIDException ex) {
         Map<String, String> errorResponse = new HashMap<>();
@@ -53,7 +86,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
-    // Exception is produced by AuthenticationManager
+    /*************************************/
+    /***** AUTHENTICATION EXCEPTIONS *****/
+    /*************************************/
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, String>> handleBadCredentialsException(BadCredentialsException ex) {
         Map<String, String> errorResponse = new HashMap<>();
@@ -70,12 +105,14 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
 
-    // Handle any general exceptions
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, String>> handleGeneralException(Exception ex) {
-        Map<String, String> errorResponse = new HashMap<>();
-        errorResponse.put("error", "An unexpected error occurred.");
-        errorResponse.put("details", ex.getMessage());
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    /************************************/
+    /***** GENERAL EXCEPTIONS ***********/
+    /************************************/
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<Map<String, String>> handleGeneralException(Exception ex) {
+//        Map<String, String> errorResponse = new HashMap<>();
+//        errorResponse.put("error", "An unexpected error occurred.");
+//        errorResponse.put("details", ex.getMessage());
+//        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+//    }
 }
