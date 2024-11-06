@@ -1,5 +1,6 @@
 package com.bme.vik.aut.thesis.depot.general.supplier.supplier.dto;
 
+import com.bme.vik.aut.thesis.depot.general.supplier.supplier.Supplier;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,10 +10,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateSupplierRequest {
-    private String name;
-    private Integer lowStockAlertThreshold;
-    private Integer expiryAlertThreshold;
-    private Integer reorderThreshold;
-    private Integer reorderQuantity;
+public class SupplierCreationResponse {
+    String userName;
+    String generatedPassword;
+    String token;
+    Supplier supplier;
 }

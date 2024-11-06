@@ -32,6 +32,7 @@ public class Product {
     private ProductStatus status;
 
     private LocalDateTime expiresAt;
+    // TODO custom validation for expiry date
 
     @Column(nullable = false, updatable = false)
     @CreationTimestamp

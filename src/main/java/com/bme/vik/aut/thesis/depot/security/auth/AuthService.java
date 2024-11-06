@@ -43,7 +43,7 @@ public class AuthService {
             throw new UserNameAlreadyExistsException("Username already exists");
         }
 
-        var user = MyUser.builder()
+        MyUser user = MyUser.builder()
                 .userName(request.getUserName())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.USER)

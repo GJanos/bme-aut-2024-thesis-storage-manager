@@ -9,7 +9,31 @@
       "name": "custom.admin.password",
       "type": "java.lang.String",
       "description": "Admin password."
+    },
+    {
+      "name": "custom.inventory.max-depot-space",
+      "type": "java.lang.Integer",
+      "description": "Maximum depot space."
+    },
+    {
+      "name": "custom.inventory.max-inventory-space",
+      "type": "java.lang.Integer",
+      "description": "Maximum inventory space."
+    },
+    {
+      "name": "custom.inventory.auto-reorder",
+      "type": "java.lang.Boolean",
+      "description": "Enable or disable auto-reorder."
+    },
+    {
+      "name": "custom.inventory.low-stock-alert",
+      "type": "java.lang.Boolean",
+      "description": "Enable or disable low stock alert."
+    },
+    {
+      "name": "custom.inventory.expiration-alert",
+      "type": "java.lang.Boolean",
+      "description": "Enable or disable expiration alert."
     }
   ]
 }
-// TODO configuration properties annot @ConfigurationProperties

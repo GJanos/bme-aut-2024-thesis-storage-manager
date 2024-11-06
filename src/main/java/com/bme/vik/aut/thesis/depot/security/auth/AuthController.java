@@ -45,7 +45,7 @@ public class AuthController {
                     required = true,
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = RegisterRequest.class),
-                            examples = @ExampleObject(value = "{ \"userName\": \"depotuser\", \"password\": \"depotuser\" }")))
+                            examples = @ExampleObject(value = "{ \"userName\": \"supplier\", \"password\": \"password\" }")))
             @RequestBody RegisterRequest request) {
 
         return ResponseEntity.ok(authService.register(request));

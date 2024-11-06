@@ -50,11 +50,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String jwtToken = authHeader.substring(7);
         String userName = jwtTokenService.extractUsername(jwtToken);
 
-        // Log extracted email and token info
         logger.info("JWT Token: {}", jwtToken);
         logger.info("Extracted User Name: {}", userName);
 
-        // Check if the email is extracted and there's no current authentication in the SecurityContext
         if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
             boolean isTokenValid = jwtTokenService.isTokenValid(jwtToken, userDetails);
@@ -74,7 +72,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 logger.warn("Invalid JWT token for user: {}", userName);
             }
         }else {
-            logger.warn("User email is null or there is already an authentication in the SecurityContext.");
+            logger.warn("Username is null or there is already an authentication in the SecurityContext.");
         }
 
         // Continue with the filter chain

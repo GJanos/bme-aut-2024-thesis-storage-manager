@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @AutoConfigureWebTestClient
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @ActiveProfiles("test")
-class ProductSchemaControllerIntegrationTest {
+class ProductSchemaAdminControllerIntegrationTest {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";

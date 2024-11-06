@@ -1,8 +1,15 @@
 package com.bme.vik.aut.thesis.depot.general.supplier.inventory;
 
+import com.bme.vik.aut.thesis.depot.exception.inventory.InventoryFullException;
+import com.bme.vik.aut.thesis.depot.exception.inventory.InventoryOutOfStockException;
+import com.bme.vik.aut.thesis.depot.exception.product.ProductNotFoundException;
+import com.bme.vik.aut.thesis.depot.exception.supplier.SupplierNotFoundException;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.Product;
 import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchema;
+import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductRepository;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.Supplier;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,10 +19,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Entity
 @Data
@@ -29,6 +33,7 @@ public class Inventory {
     private Long id;
 
     @OneToOne(mappedBy = "inventory", cascade = CascadeType.ALL)
+    @JsonBackReference
     private Supplier supplier;
 
     private int usedSpace;
@@ -37,19 +42,16 @@ public class Inventory {
 
     private int lowStockAlertThreshold;
 
-    private int expiryAlertThreshold;
+    private int expiryAlertThreshold; // in days
 
     private int reorderThreshold;
 
     private int reorderQuantity;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "inventory_products", joinColumns = @JoinColumn(name = "inventory_id"))
     @Column(name = "product_id")
     private List<Long> productIds = new ArrayList<>();
-
-    @Transient
-    private Map<ProductSchema, List<Product>> stock = new HashMap<>();
 
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
@@ -58,39 +60,23 @@ public class Inventory {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    // TODO place this method in a service class
-//    // Dynamically build the in-memory stock map on application startup or when needed
-//    @PostLoad
-//    public void initializeStock() {
-//        stock.clear();
-//        for (Long productId : productIds) {
-//            Product product = findProductById(productId); // Fetch the product by its ID
-//            ProductSchema schema = product.getSchema();
-//            stock.computeIfAbsent(schema, k -> new ArrayList<>()).add(product);
-//        }
-//    }
+    public void addStock(List<Product> products) {
+        // available space check not needed here,
+        // as it is done in the service layer
+        for (Product product : products) {
+            this.productIds.add(product.getId());
+            this.usedSpace += product.getSchema().getStorageSpaceNeeded();
+        }
+    }
 
-//    // Add a product (update both in-memory structure and the list of product IDs)
-//    public void addProduct(Product product) {
-//        this.productIds.add(product.getId());
-//        stock.computeIfAbsent(product.getSchema(), k -> new ArrayList<>()).add(product);
-//        this.usedSpace += product.getSpaceRequired();
-//    }
-//
-//    // Remove a product (update both in-memory structure and the list of product IDs)
-//    public void removeProduct(Product product) {
-//        this.productIds.remove(product.getId());
-//        List<Product> productsInSchema = stock.get(product.getSchema());
-//        if (productsInSchema != null) {
-//            productsInSchema.remove(product);
-//            if (productsInSchema.isEmpty()) {
-//                stock.remove(product.getSchema());
-//            }
-//        }
-//        this.usedSpace -= product.getSpaceRequired();
-//    }
-//
-//    public boolean hasAvailableSpace(int requiredSpace) {
-//        return (usedSpace + requiredSpace) <= maxAvailableSpace;
-//    }
+    public void removeStock(List<Product> products) {
+        for (Product product : products) {
+            this.productIds.remove(product.getId());
+            this.usedSpace -= product.getSchema().getStorageSpaceNeeded();
+        }
+    }
+
+    public boolean hasAvailableSpace(int requiredSpace) {
+        return (usedSpace + requiredSpace) <= maxAvailableSpace;
+    }
 }

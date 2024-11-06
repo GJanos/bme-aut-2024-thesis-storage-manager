@@ -21,7 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "Category Management", description = "Administrative operations for categories.")
 @PreAuthorize("hasRole('ADMIN')")
-public class CategoryController {
+public class CategoryAdminController {
 
     private final CategoryService categoryService;
 

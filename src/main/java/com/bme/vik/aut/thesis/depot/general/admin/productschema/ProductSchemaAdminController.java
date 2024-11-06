@@ -21,7 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "Product Schema Management", description = "Administrative operations for product schemas.")
 @PreAuthorize("hasRole('ADMIN')")
-public class ProductSchemaController {
+public class ProductSchemaAdminController {
 
     private final ProductSchemaService productSchemaService;
 
@@ -93,7 +93,7 @@ public class ProductSchemaController {
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = CreateProductSchemaRequest.class),
-                            examples = @ExampleObject(value = "{ \"name\": \"Laptop\", \"storageSpaceNeeded\": 5.0, \"categoryIDs\": [1, 2] }")
+                            examples = @ExampleObject(value = "{ \"name\": \"Laptop\", \"storageSpaceNeeded\": 5.0, \"categoryIDs\": [1] }")
                     )
             )
             @RequestBody CreateProductSchemaRequest request) {
