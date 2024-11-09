@@ -11,6 +11,7 @@ import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchema;
 import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchemaService;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.Product;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductRepository;
+import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductStatus;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.dto.CreateProductStockRequest;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.dto.ProductStockResponse;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.dto.RemoveProductStockRequest;
@@ -125,7 +126,6 @@ public class InventoryService {
 
         ProductSchema productSchema = productSchemaService.getProductSchemaById(request.getProductSchemaId());
         Long productSchemaId = productSchema.getId();
-        validateProductSchema(inventoryId, productSchemaId);
 
         // validation complete
         int quantity = validatePositiveQuantity(request.getQuantity());
@@ -146,6 +146,9 @@ public class InventoryService {
         // create products and save them
         List<Product> productsToAdd = createProductsToAdd(request, quantity, productSchema);
         productRepository.saveAll(productsToAdd);
+
+        // add products to stock
+        addStock(inventoryId, productSchemaId, productsToAdd);
 
         // add products to inventory and save it
         inventory.addStock(productsToAdd);
@@ -188,9 +191,11 @@ public class InventoryService {
             throw new InventoryOutOfStockException(errorMsg);
         }
 
+        // create products to remove and remove them
         List<Product> productToRemove = createProductsToRemoveForNearExpiryStock(inventoryId, productSchemaId, quantity);
         productRepository.deleteAll(productToRemove);
 
+        // remove products from inventory and save it
         inventory.removeStock(productToRemove);
         inventoryRepository.save(inventory);
 
@@ -211,6 +216,25 @@ public class InventoryService {
                 .quantity(quantity)
                 .response("Stock removed successfully")
                 .build();
+    }
+
+    @Transactional
+    public List<Product> getAllProductsInInventoryForUser(MyUser user) {
+        validateSupplierExists(user);
+        Long supplierId = user.getSupplier().getId();
+        Inventory inventory = getInventoryBySupplierId(supplierId);
+        Long inventoryId = inventory.getId();
+
+        if (!stock.containsKey(inventoryId)) {
+            logger.warn("No products found in inventory with ID {}", inventoryId);
+            return new ArrayList<>();
+        }
+
+        List<Product> allProducts = new ArrayList<>();
+        stock.get(inventoryId).values().forEach(allProducts::addAll);
+
+        logger.info("Fetched all products in inventory for supplier with ID: {}", supplierId);
+        return allProducts;
     }
 
     private void validateSupplierExists(MyUser user) {
@@ -250,13 +274,37 @@ public class InventoryService {
             products.add(Product.builder()
                     .schema(productSchema)
                     .description(request.getDescription())
+                    .status(ProductStatus.FREE)
                     .expiresAt(request.getExpiresAt())
                     .build());
         }
         return products;
     }
 
+    private void addStock(Long inventoryId, Long productSchemaId, List<Product> productsToAdd) {
+        if (!stock.containsKey(inventoryId)) {
+            stock.put(inventoryId, new HashMap<>());
+        }
+
+        if (!stock.get(inventoryId).containsKey(productSchemaId)) {
+            stock.get(inventoryId).put(productSchemaId, new ArrayList<>());
+        }
+
+        stock.get(inventoryId).get(productSchemaId).addAll(productsToAdd);
+    }
+
+    private void removeStock(Long inventoryId, Long productSchemaId, List<Product> productsToRemove) {
+        stock.get(inventoryId).get(productSchemaId).removeAll(productsToRemove);
+
+        if (stock.get(inventoryId).get(productSchemaId).isEmpty()) {
+            stock.get(inventoryId).remove(productSchemaId);
+        }
+    }
+
     private int getCurrentStock(Long inventoryId, Long productSchemaId) {
+        if (!stock.get(inventoryId).containsKey(productSchemaId)) {
+            return 0;
+        }
         return stock.get(inventoryId).get(productSchemaId).size();
     }
 

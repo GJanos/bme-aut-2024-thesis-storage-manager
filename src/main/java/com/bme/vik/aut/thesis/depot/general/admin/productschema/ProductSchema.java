@@ -28,7 +28,7 @@ public class ProductSchema {
 
     private int storageSpaceNeeded;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "product_category_mapping",
             joinColumns = @JoinColumn(name = "product_schema_id"),
