@@ -5,13 +5,14 @@ import com.bme.vik.aut.thesis.depot.exception.category.CategoryNotFoundException
 import com.bme.vik.aut.thesis.depot.exception.inventory.InventoryFullException;
 import com.bme.vik.aut.thesis.depot.exception.inventory.InventoryNotFoundException;
 import com.bme.vik.aut.thesis.depot.exception.inventory.InventoryOutOfStockException;
+import com.bme.vik.aut.thesis.depot.exception.order.*;
 import com.bme.vik.aut.thesis.depot.exception.product.InvalidProductExpiryException;
 import com.bme.vik.aut.thesis.depot.exception.product.ProductNotFoundException;
 import com.bme.vik.aut.thesis.depot.exception.productschema.NonGreaterThanZeroStorageSpaceException;
 import com.bme.vik.aut.thesis.depot.exception.productschema.ProductSchemaAlreadyExistsException;
 import com.bme.vik.aut.thesis.depot.exception.productschema.ProductSchemaNotFoundException;
 import com.bme.vik.aut.thesis.depot.exception.supplier.InvalidCreateSupplierRequestException;
-import com.bme.vik.aut.thesis.depot.exception.supplier.NonGreaterThanZeroProductStockAddException;
+import com.bme.vik.aut.thesis.depot.exception.supplier.NonGreaterThanZeroQuantityException;
 import com.bme.vik.aut.thesis.depot.exception.supplier.SupplierAlreadyExistsException;
 import com.bme.vik.aut.thesis.depot.exception.supplier.SupplierNotFoundException;
 import com.bme.vik.aut.thesis.depot.exception.user.UserNameAlreadyExistsException;
@@ -67,6 +68,58 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InventoryOutOfStockException.class)
     public ResponseEntity<Map<String, String>> handleInventoryOutOfStockException(InventoryOutOfStockException ex) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    /****************************/
+    /***** ORDER EXCEPTIONS *****/
+    /****************************/
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleOrderNotFoundException(OrderNotFoundException ex) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InvalidCreateOrderRequestException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidCreateOrderRequestException(InvalidCreateOrderRequestException ex) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(TooLargeOrderException.class)
+    public ResponseEntity<Map<String, String>> handleTooLargeOrderException(TooLargeOrderException ex) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(NonGreaterThanZeroCreateOrderRequestException.class)
+    public ResponseEntity<Map<String, String>> handleNonGreaterThanZeroCreateOrderRequestException(NonGreaterThanZeroCreateOrderRequestException ex) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ProductAlreadyReservedException.class)
+    public ResponseEntity<Map<String, String>> handleProductAlreadyReservedException(ProductAlreadyReservedException ex) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(NotOwnOrderException.class)
+    public ResponseEntity<Map<String, String>> handleNotOwnOrderException(NotOwnOrderException ex) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(NonCancellableOrderException.class)
+    public ResponseEntity<Map<String, String>> handleNonCancellableOrderException(NonCancellableOrderException ex) {
         Map<String, String> errorResponse = new HashMap<>();
         errorResponse.put("error", ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -130,8 +183,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(NonGreaterThanZeroProductStockAddException.class)
-    public ResponseEntity<Map<String, String>> handleNonGreaterThanZeroProductStockAddException(NonGreaterThanZeroProductStockAddException ex) {
+    @ExceptionHandler(NonGreaterThanZeroQuantityException.class)
+    public ResponseEntity<Map<String, String>> handleNonGreaterThanZeroProductStockAddException(NonGreaterThanZeroQuantityException ex) {
         Map<String, String> errorResponse = new HashMap<>();
         errorResponse.put("error", ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -193,15 +246,69 @@ public class GlobalExceptionHandler {
         errorResponse.put("details", ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
-
-    /************************************/
-    /***** GENERAL EXCEPTIONS ***********/
-    /************************************/
-//    @ExceptionHandler(Exception.class)
-//    public ResponseEntity<Map<String, String>> handleGeneralException(Exception ex) {
-//        Map<String, String> errorResponse = new HashMap<>();
-//        errorResponse.put("error", "An unexpected error occurred.");
-//        errorResponse.put("details", ex.getMessage());
-//        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-//    }
 }
+
+//
+//@ControllerAdvice
+//public class GlobalExceptionHandler {
+//
+//    // Helper method to build the error response
+//    private ResponseEntity<Map<String, String>> buildErrorResponse(String message, HttpStatus status) {
+//        Map<String, String> errorResponse = new HashMap<>();
+//        errorResponse.put("error", message);
+//        return new ResponseEntity<>(errorResponse, status);
+//    }
+//
+//    /*******************************/
+//    /***** SPECIFIC EXCEPTIONS *****/
+//    /*******************************/
+//
+//    // Category Exceptions
+//    @ExceptionHandler(CategoryAlreadyExistsException.class)
+//    public ResponseEntity<Map<String, String>> handleCategoryAlreadyExistsException(CategoryAlreadyExistsException ex) {
+//        return buildErrorResponse(ex.getMessage(), HttpStatus.CONFLICT);
+//    }
+//
+//    @ExceptionHandler(CategoryNotFoundException.class)
+//    public ResponseEntity<Map<String, String>> handleCategoryNotFoundException(CategoryNotFoundException ex) {
+//        return buildErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
+//    }
+//
+//    // Inventory Exceptions
+//    @ExceptionHandler({InventoryNotFoundException.class, SupplierNotFoundException.class})
+//    public ResponseEntity<Map<String, String>> handleNotFoundException(RuntimeException ex) {
+//        return buildErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
+//    }
+//
+//    @ExceptionHandler({InventoryFullException.class, InventoryOutOfStockException.class,
+//            InvalidCreateOrderRequestException.class, TooLargeOrderException.class,
+//            NonGreaterThanZeroCreateOrderRequestException.class,
+//            InvalidProductExpiryException.class, NonGreaterThanZeroStorageSpaceException.class,
+//            NonGreaterThanZeroQuantityException.class, InvalidCreateSupplierRequestException.class})
+//    public ResponseEntity<Map<String, String>> handleBadRequestExceptions(RuntimeException ex) {
+//        return buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
+//    }
+//
+//    // Order and Product Exceptions
+//    @ExceptionHandler({OrderNotFoundException.class, ProductNotFoundException.class})
+//    public ResponseEntity<Map<String, String>> handleProductAndOrderNotFoundException(RuntimeException ex) {
+//        return buildErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
+//    }
+//
+//    // Access and Authentication Exceptions
+//    @ExceptionHandler(BadCredentialsException.class)
+//    public ResponseEntity<Map<String, String>> handleBadCredentialsException(BadCredentialsException ex) {
+//        return buildErrorResponse("Unauthorized: " + ex.getMessage(), HttpStatus.UNAUTHORIZED);
+//    }
+//
+//    @ExceptionHandler(AccessDeniedException.class)
+//    public ResponseEntity<Map<String, String>> handleAccessDeniedException(AccessDeniedException ex) {
+//        return buildErrorResponse("Access Denied: " + ex.getMessage(), HttpStatus.FORBIDDEN);
+//    }
+//
+//    // Catch-all for unexpected exceptions
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
+//        return buildErrorResponse("An unexpected error occurred: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+//    }
+//}

@@ -14,8 +14,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public enum Role {
 
-    // permissions are defined in the order of user < supplier < admin
-    // each role has the permissions of the weaker roles
+    // base: user permissions
+    // supplier: supplier + user permissions
+    // admin: admin + user permissions
     USER(Set.of(Permission.USER_CREATE,
             Permission.USER_READ,
             Permission.USER_UPDATE,
@@ -30,7 +31,7 @@ public enum Role {
     }}),
 
     ADMIN(new HashSet<>() {{
-        addAll(SUPPLIER.getPermissions());
+        addAll(USER.getPermissions());
         addAll(Set.of(Permission.ADMIN_CREATE,
                 Permission.ADMIN_READ,
                 Permission.ADMIN_UPDATE,

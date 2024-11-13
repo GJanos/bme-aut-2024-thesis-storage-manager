@@ -18,7 +18,7 @@ spring:
     database: POSTGRESQL
     show-sql: true
     hibernate:
-      ddl-auto: update #create-drop
+      ddl-auto: update # create-drop #
   sql:
     init:
       platform: postgres

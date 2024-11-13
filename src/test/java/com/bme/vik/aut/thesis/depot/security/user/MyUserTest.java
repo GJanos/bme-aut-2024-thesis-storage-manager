@@ -149,7 +149,7 @@ class MyUserTest {
 
         //***** <-- then: Verify authorities --> *****//
         // 4 User permissions + 4 Supplier permissions + 4 Admin permissions + 1 Role
-        assertEquals(13, authorities.size());
+        assertEquals(9, authorities.size());
         assertTrue(authorities.contains(new SimpleGrantedAuthority("ROLE_ADMIN")));
     }
 }

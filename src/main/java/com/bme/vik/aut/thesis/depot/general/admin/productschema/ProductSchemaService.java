@@ -37,6 +37,15 @@ public class ProductSchemaService {
                 });
     }
 
+    public ProductSchema getProductSchemaByName(String name) {
+        logger.info("Fetching product schema by name: {}", name);
+        return productSchemaRepository.findByName(name)
+                .orElseThrow(() -> {
+                    logger.warn("Product schema with name {} not found", name);
+                    return new ProductSchemaNotFoundException("Product schema with name " + name + " not found");
+                });
+    }
+
     public ProductSchema createProductSchema(CreateProductSchemaRequest request) {
         logger.info("Creating new product schema with name: {}", request.getName());
 
