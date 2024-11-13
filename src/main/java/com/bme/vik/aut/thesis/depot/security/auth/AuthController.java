@@ -71,10 +71,21 @@ public class AuthController {
                     required = true,
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = AuthRequest.class),
-                            examples = @ExampleObject(value = "{ \"userName\": \"depotadmin\", \"password\": \"depotadmin\" }")))
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Admin User",
+                                            value = "{ \"userName\": \"depotadmin\", \"password\": \"depotadmin\" }"
+                                    ),
+                                    @ExampleObject(
+                                            name = "Supplier User",
+                                            value = "{ \"userName\": \"supplier\", \"password\": \"password\" }"
+                                    )
+                            })
+            )
             @RequestBody AuthRequest request) {
 
         return ResponseEntity.ok(authService.authenticate(request));
     }
+
 }
 

@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import static com.bme.vik.aut.thesis.depot.security.user.Permission.USER_CREATE;
 import static com.bme.vik.aut.thesis.depot.security.user.Permission.USER_READ;
 import static com.bme.vik.aut.thesis.depot.security.user.Role.ADMIN;
 import static com.bme.vik.aut.thesis.depot.security.user.Role.USER;
@@ -42,8 +43,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(req ->
                         req.requestMatchers(WHITE_LIST_URL)
                                 .permitAll()
-                                .requestMatchers("/user/**").hasRole(ADMIN.name())
+                                .requestMatchers("/admin/**").hasRole(ADMIN.name())
+                                .requestMatchers("/user/**").hasAnyRole(ADMIN.name())
                                 .requestMatchers("/info/**").hasAnyAuthority(USER_READ.getPermission())
+                                // more granular permissions...
+//                                .requestMatchers("/order/**").hasAnyAuthority(USER_CREATE.getPermission())
+//                                .requestMatchers("/supplier/**").hasRole(SUPPLIER.name())
                                 .anyRequest()
                                 .authenticated()
                 )

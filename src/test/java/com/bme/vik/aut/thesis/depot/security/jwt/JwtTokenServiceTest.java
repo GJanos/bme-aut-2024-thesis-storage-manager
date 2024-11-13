@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-
 @SpringJUnitConfig(JwtTokenServiceTest.JwtTokenServiceTestConfig.class)
 @TestPropertySource(properties = {
         "application.security.jwt.secret-key=rg26e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e",
@@ -38,9 +37,9 @@ class JwtTokenServiceTest {
 
     final String USER_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdXRob3JpdGllcyI6WyJ1c2VyOmRlbGV0ZSIsInVzZXI6dXBkYXRlIiwidXNlcjpyZWFkIiwidXNlcjpjcmVhdGUiLCJST0xFX1VTRVIiXSwic3ViIjoiZGVwb3R1c2VyIiwiaWF0IjoxNzI5NzA4NzIxLCJleHAiOjE3MzgzNDg3MjF9.NQXKdN3IwODVRwU6MaK398AVYQ4_a6pWaa1dnp0CgP0";
 
-    // TODO final String SUPPLIER_TOKEN_NEVER_EXPR ...
+    final String SUPPLIER_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdXRob3JpdGllcyI6WyJ1c2VyOmRlbGV0ZSIsInN1cHBsaWVyOnVwZGF0ZSIsInN1cHBsaWVyOmNyZWF0ZSIsInN1cHBsaWVyOmRlbGV0ZSIsInVzZXI6dXBkYXRlIiwidXNlcjpjcmVhdGUiLCJzdXBwbGllcjpyZWFkIiwidXNlcjpyZWFkIiwiUk9MRV9TVVBQTElFUiJdLCJzdWIiOiJzdXBwbGllciIsImlhdCI6MTczMTE0MzUwOCwiZXhwIjoxNzM5NzgzNTA4fQ.MwQ98s35PyAdHc4oLyrbugh6MaIuI9uzTH2ZXQc0g3U";
 
-    final String ADMIN_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdXRob3JpdGllcyI6WyJ1c2VyOnJlYWQiLCJhZG1pbjp1cGRhdGUiLCJzdXBwbGllcjpyZWFkIiwidXNlcjpkZWxldGUiLCJzdXBwbGllcjpkZWxldGUiLCJzdXBwbGllcjp1cGRhdGUiLCJ1c2VyOnVwZGF0ZSIsInN1cHBsaWVyOmNyZWF0ZSIsImFkbWluOmNyZWF0ZSIsImFkbWluOnJlYWQiLCJhZG1pbjpkZWxldGUiLCJ1c2VyOmNyZWF0ZSIsIlJPTEVfQURNSU4iXSwic3ViIjoiZGVwb3RhZG1pbiIsImlhdCI6MTcyOTcwODY5MSwiZXhwIjoxNzM4MzQ4NjkxfQ.u3bcvmCFurzLqITKcFuIbKRAdcPfbrx11bZPjk9kijA";
+    final String ADMIN_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdXRob3JpdGllcyI6WyJ1c2VyOmRlbGV0ZSIsImFkbWluOnVwZGF0ZSIsImFkbWluOnJlYWQiLCJhZG1pbjpjcmVhdGUiLCJhZG1pbjpkZWxldGUiLCJ1c2VyOnVwZGF0ZSIsInVzZXI6Y3JlYXRlIiwidXNlcjpyZWFkIiwiUk9MRV9BRE1JTiJdLCJzdWIiOiJkZXBvdGFkbWluIiwiaWF0IjoxNzMxMTQzNTg3LCJleHAiOjE3Mzk3ODM1ODd9.FzjUYqAQx8hVl3cqAufIBC1LRKAjGzP4IiRlh3x0Tro";
 
     final String BAD_TOKEN = "badtoken.for.testing";
 
@@ -48,8 +47,8 @@ class JwtTokenServiceTest {
 
     final String USER_NAME = "depotuser";
     final String USER_PASSWORD = "depotuser";
-    final String SUPPLIER_NAME = "depotsupplier";
-    final String SUPPLIER_PASSWORD = "depotsupplier";
+    final String SUPPLIER_NAME = "supplier";
+    final String SUPPLIER_PASSWORD = "password";
     final String ADMIN_NAME = "depotadmin";
     final String ADMIN_PASSWORD = "depotadmin";
 
@@ -66,12 +65,11 @@ class JwtTokenServiceTest {
         assertEquals(USER_NAME, username);
     }
 
-//TODO
-//    @Test
-//    void shouldExtractCorrectUsernameFromSupplierToken() {
-//        String username = jwtTokenService.extractUsername(SUPPLIER_TOKEN_NEVER_EXPR);
-//        assertEquals(SUPPLIER_NAME, username);
-//    }
+    @Test
+    void shouldExtractCorrectUsernameFromSupplierToken() {
+        String username = jwtTokenService.extractUsername(SUPPLIER_TOKEN);
+        assertEquals(SUPPLIER_NAME, username);
+    }
 
     @Test
     void shouldExtractCorrectUsernameFromAdminToken() {
@@ -96,23 +94,20 @@ class JwtTokenServiceTest {
         assertTrue(authorities.contains("user:delete"));
     }
 
-//TODO
-//    @Test
-//    void shouldExtractCorrectClaimFromSupplierToken() {
-//        String SUPPLIER_TOKEN = "your_supplier_token_here";
-//
-//List<String> authorities = extractClaims(SUPPLIER_TOKEN);
-//        assertNotNull(authorities);
-//        assertTrue(authorities.contains("ROLE_SUPPLIER"));
-//        assertTrue(authorities.contains("user:create"));
-//        assertTrue(authorities.contains("user:read"));
-//        assertTrue(authorities.contains("user:update"));
-//        assertTrue(authorities.contains("user:delete"));
-//        assertTrue(authorities.contains("supplier:create"));
-//        assertTrue(authorities.contains("supplier:read"));
-//        assertTrue(authorities.contains("supplier:update"));
-//        assertTrue(authorities.contains("supplier:delete"));
-//    }
+    @Test
+    void shouldExtractCorrectClaimFromSupplierToken() {
+        List<String> authorities = extractClaims(SUPPLIER_TOKEN);
+        assertNotNull(authorities);
+        assertTrue(authorities.contains("ROLE_SUPPLIER"));
+        assertTrue(authorities.contains("user:create"));
+        assertTrue(authorities.contains("user:read"));
+        assertTrue(authorities.contains("user:update"));
+        assertTrue(authorities.contains("user:delete"));
+        assertTrue(authorities.contains("supplier:create"));
+        assertTrue(authorities.contains("supplier:read"));
+        assertTrue(authorities.contains("supplier:update"));
+        assertTrue(authorities.contains("supplier:delete"));
+    }
 
     @Test
     void shouldExtractCorrectClaimFromAdminToken() {
@@ -123,10 +118,6 @@ class JwtTokenServiceTest {
         assertTrue(authorities.contains("user:read"));
         assertTrue(authorities.contains("user:update"));
         assertTrue(authorities.contains("user:delete"));
-        assertTrue(authorities.contains("supplier:create"));
-        assertTrue(authorities.contains("supplier:read"));
-        assertTrue(authorities.contains("supplier:update"));
-        assertTrue(authorities.contains("supplier:delete"));
         assertTrue(authorities.contains("admin:create"));
         assertTrue(authorities.contains("admin:read"));
         assertTrue(authorities.contains("admin:update"));

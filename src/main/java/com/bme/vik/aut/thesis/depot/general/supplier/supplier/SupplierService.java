@@ -13,12 +13,15 @@ import com.bme.vik.aut.thesis.depot.security.jwt.JwtTokenService;
 import com.bme.vik.aut.thesis.depot.security.user.MyUser;
 import com.bme.vik.aut.thesis.depot.security.user.Role;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +46,12 @@ public class SupplierService {
                 .orElseThrow(() -> new SupplierNotFoundException("Supplier with ID " + id + " not found"));
     }
 
+    public Supplier getSupplierByName(String name) {
+        logger.info("Fetching supplier by name: {}", name);
+        return supplierRepository.findByName(name)
+                .orElseThrow(() -> new SupplierNotFoundException("Supplier with name " + name + " not found"));
+    }
+
     public SupplierCreationResponse createSupplier(CreateSupplierRequest request) {
         logger.info("Creating new supplier with name: {}", request.getName());
 
@@ -61,9 +70,11 @@ public class SupplierService {
                 .inventory(inventory)
                 .build();
 
-        // Create User
+        // Create Supplier user
         String randomPassword = "password";
-        // TODO String randomPassword = passwordGenerator.generateSecurePassword(); // Use a utility for password generation
+        // TODO here
+        //String randomPassword = generateRandomSupplierUserPassword();
+
         MyUser user = MyUser.builder()
                 .userName(supplier.getName())
                 .password(passwordEncoder.encode(randomPassword))
@@ -73,6 +84,7 @@ public class SupplierService {
 
         inventory.setSupplier(supplier);
         supplier.setUser(user);
+
         MyUser savedUser = userRepository.save(user);
 
         logger.info("Supplier created. User ID: {}, supplier ID: {}, inventory ID: {}", savedUser.getId(), supplier.getId(), inventory.getId());
@@ -132,5 +144,25 @@ public class SupplierService {
             logger.error(errorMsg);
             throw new InvalidCreateSupplierRequestException(errorMsg);
         }
+    }
+
+    private String generateRandomSupplierUserPassword() {
+        String upperCaseLetters = RandomStringUtils.random(2, 65, 90, true, true);
+        String lowerCaseLetters = RandomStringUtils.random(2, 97, 122, true, true);
+        String numbers = RandomStringUtils.randomNumeric(2);
+        String specialChar = RandomStringUtils.random(2, 33, 47, false, false);
+        String totalChars = RandomStringUtils.randomAlphanumeric(2);
+        String combinedChars = upperCaseLetters.concat(lowerCaseLetters)
+                .concat(numbers)
+                .concat(specialChar)
+                .concat(totalChars);
+        List<Character> pwdChars = combinedChars.chars()
+                .mapToObj(c -> (char) c)
+                .collect(Collectors.toList());
+        Collections.shuffle(pwdChars);
+        String password = pwdChars.stream()
+                .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append)
+                .toString();
+        return password;
     }
 }

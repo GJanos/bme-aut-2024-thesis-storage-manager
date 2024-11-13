@@ -1,18 +1,25 @@
 package com.bme.vik.aut.thesis.depot.general.order.dto;
 
-import com.bme.vik.aut.thesis.depot.security.user.MyUser;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateOrderWithProductIdRequest {
+public class COWProductId implements CreateOrderRequest {
     private Long productId;
     private int quantity;
+
+    @Override
+    public String getProductName() {
+        return null;
+    }
+
+    @Override
+    public String getSupplierName() {
+        return null;
+    }
 }

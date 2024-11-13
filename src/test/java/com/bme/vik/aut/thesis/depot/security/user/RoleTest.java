@@ -22,7 +22,6 @@ class RoleTest {
 
         role = Role.ADMIN;
         assertEquals(Set.of(Permission.USER_CREATE, Permission.USER_READ, Permission.USER_UPDATE, Permission.USER_DELETE,
-                Permission.SUPPLIER_CREATE, Permission.SUPPLIER_READ, Permission.SUPPLIER_UPDATE, Permission.SUPPLIER_DELETE,
                 Permission.ADMIN_CREATE, Permission.ADMIN_READ, Permission.ADMIN_UPDATE, Permission.ADMIN_DELETE), role.getPermissions());
     }
 
@@ -61,17 +60,13 @@ class RoleTest {
         Role role = Role.ADMIN;
         List<SimpleGrantedAuthority> authorities = role.getAuthorities();
 
-        assertEquals(13, authorities.size());  // 12 permissions + 1 ROLE_ADMIN
+        assertEquals(9, authorities.size());  // 12 permissions + 1 ROLE_ADMIN
         assertTrue(authorities.contains(new SimpleGrantedAuthority("ROLE_ADMIN")));
 
         assertTrue(authorities.contains(new SimpleGrantedAuthority("user:create")));
         assertTrue(authorities.contains(new SimpleGrantedAuthority("user:read")));
         assertTrue(authorities.contains(new SimpleGrantedAuthority("user:update")));
         assertTrue(authorities.contains(new SimpleGrantedAuthority("user:delete")));
-        assertTrue(authorities.contains(new SimpleGrantedAuthority("supplier:create")));
-        assertTrue(authorities.contains(new SimpleGrantedAuthority("supplier:read")));
-        assertTrue(authorities.contains(new SimpleGrantedAuthority("supplier:update")));
-        assertTrue(authorities.contains(new SimpleGrantedAuthority("supplier:delete")));
         assertTrue(authorities.contains(new SimpleGrantedAuthority("admin:create")));
         assertTrue(authorities.contains(new SimpleGrantedAuthority("admin:read")));
         assertTrue(authorities.contains(new SimpleGrantedAuthority("admin:update")));

@@ -1,6 +1,9 @@
 package com.bme.vik.aut.thesis.depot.general.info;
 
 import com.bme.vik.aut.thesis.depot.exception.user.UserNotFoundByIDException;
+import com.bme.vik.aut.thesis.depot.general.info.dto.OrderResponse;
+import com.bme.vik.aut.thesis.depot.security.user.MyUser;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.bme.vik.aut.thesis.depot.general.admin.category.Category;
 import com.bme.vik.aut.thesis.depot.general.info.dto.ProductResponse;
 import com.bme.vik.aut.thesis.depot.general.info.dto.SupplierResponse;
@@ -108,5 +111,34 @@ public class InfoController {
         return ResponseEntity.ok(suppliers);
     }
 
+    @Operation(
+            summary = "Get all orders for the authenticated user",
+            description = "Fetches all orders associated with the authenticated user.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "User's orders successfully retrieved",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = OrderResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Unauthorized, authentication token is missing or invalid",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "Forbidden, user is not allowed to access this resource",
+                            content = @Content
+                    )
+            }
+    )
+    @GetMapping("/order")
+    @PreAuthorize("hasAuthority('user:read')")
+    public ResponseEntity<List<OrderResponse>> getUserOrders(
+            @AuthenticationPrincipal MyUser userPrincipal) {
+
+        List<OrderResponse> orders = infoService.getUserOrders(userPrincipal.getId());
+        return ResponseEntity.ok(orders);
+    }
 }
 

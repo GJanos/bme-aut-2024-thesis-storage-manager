@@ -1,8 +1,12 @@
 package com.bme.vik.aut.thesis.depot.general.info;
 
 import com.bme.vik.aut.thesis.depot.general.admin.category.Category;
+import com.bme.vik.aut.thesis.depot.general.info.dto.OrderItemResponse;
+import com.bme.vik.aut.thesis.depot.general.info.dto.OrderResponse;
 import com.bme.vik.aut.thesis.depot.general.info.dto.ProductResponse;
 import com.bme.vik.aut.thesis.depot.general.info.dto.SupplierResponse;
+import com.bme.vik.aut.thesis.depot.general.order.Order;
+import com.bme.vik.aut.thesis.depot.general.order.OrderRepository;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.Product;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductRepository;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.Supplier;
@@ -30,6 +34,7 @@ public class InfoServiceImpl implements InfoService {
     private final ModelMapper modelMapper;
     private final ProductRepository productRepository;
     private final SupplierRepository supplierRepository;
+    private final OrderRepository orderRepository;
 
     @Override
     public UserResponse getUserInfoByName(String username) throws UsernameNotFoundException {
@@ -67,4 +72,23 @@ public class InfoServiceImpl implements InfoService {
         return suppliers.stream().map(supplier -> modelMapper.map(supplier, SupplierResponse.class)).collect(Collectors.toList());
     }
 
+    @Override
+    public List<OrderResponse> getUserOrders(Long userId) {
+        logger.info("Fetching orders for user ID: {}", userId);
+
+        List<Order> orders = orderRepository.findAllByUserId(userId);
+
+        return orders.stream().map(order -> OrderResponse.builder()
+                        .id(order.getId())
+                        .orderItems(order.getOrderItems().stream().map(item -> OrderItemResponse.builder()
+                                        .productId(item.getId())
+                                        .productName(item.getSchema().getName())
+                                        .supplierId(item.getSupplierId())
+                                        .build())
+                                .collect(Collectors.toList()))
+                        .status(order.getStatus().name())
+                        .createdAt(order.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
 }

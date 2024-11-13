@@ -3,9 +3,10 @@ package com.bme.vik.aut.thesis.depot.general.supplier.inventory;
 import com.bme.vik.aut.thesis.depot.exception.inventory.InventoryFullException;
 import com.bme.vik.aut.thesis.depot.exception.inventory.InventoryNotFoundException;
 import com.bme.vik.aut.thesis.depot.exception.inventory.InventoryOutOfStockException;
+import com.bme.vik.aut.thesis.depot.exception.order.TooLargeOrderException;
 import com.bme.vik.aut.thesis.depot.exception.product.InvalidProductExpiryException;
 import com.bme.vik.aut.thesis.depot.exception.product.ProductNotFoundException;
-import com.bme.vik.aut.thesis.depot.exception.supplier.NonGreaterThanZeroProductStockAddException;
+import com.bme.vik.aut.thesis.depot.exception.supplier.NonGreaterThanZeroQuantityException;
 import com.bme.vik.aut.thesis.depot.exception.user.UserSupplierNotFoundException;
 import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchema;
 import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchemaService;
@@ -27,6 +28,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.lang.Math.min;
 
 @Service
 @RequiredArgsConstructor
@@ -113,6 +117,17 @@ public class InventoryService {
                 .orElseThrow(() -> new InventoryNotFoundException("Inventory for supplier with ID " + supplierId + " not found"));
     }
 
+    public Inventory getByProductId(Long productId) {
+        logger.info("Fetching inventory by product ID: {}", productId);
+        return inventoryRepository.findByProductId(productId)
+                .orElseThrow(() -> new InventoryNotFoundException("Inventory for product with ID " + productId + " not found"));
+    }
+
+    public List<Inventory> getInventoriesWithStockForSchema(Long productSchemaId) {
+        logger.info("Fetching inventories with stock for product schema with ID: {}", productSchemaId);
+        return inventoryRepository.findAllByProductSchemaId(productSchemaId);
+    }
+
     @Transactional
     public ProductStockResponse addStock(MyUser user, CreateProductStockRequest request) {
         // validate request
@@ -144,11 +159,11 @@ public class InventoryService {
         }
 
         // create products and save them
-        List<Product> productsToAdd = createProductsToAdd(request, quantity, productSchema);
+        List<Product> productsToAdd = createProductsToAdd(request, quantity, productSchema, inventory);
         productRepository.saveAll(productsToAdd);
 
         // add products to stock
-        addStock(inventoryId, productSchemaId, productsToAdd);
+        addToInMemoryStock(inventoryId, productSchemaId, productsToAdd);
 
         // add products to inventory and save it
         inventory.addStock(productsToAdd);
@@ -163,6 +178,8 @@ public class InventoryService {
                 .build();
     }
 
+    // TODO remove stock has to account for reserved stock as well!!!
+    // !!!!!!!!!!!!!!!!!
     @Transactional
     public ProductStockResponse removeStock(MyUser user, RemoveProductStockRequest request) {
         // validate request
@@ -220,6 +237,7 @@ public class InventoryService {
 
     @Transactional
     public List<Product> getAllProductsInInventoryForUser(MyUser user) {
+        // TODO might just inventoryRepository.findAllProducts()
         validateSupplierExists(user);
         Long supplierId = user.getSupplier().getId();
         Inventory inventory = getInventoryBySupplierId(supplierId);
@@ -237,6 +255,115 @@ public class InventoryService {
         return allProducts;
     }
 
+    @Transactional
+    public void reserveProduct(Inventory inventory, Product product) {
+        Long inventoryId = inventory.getId();
+        Long schemaId = product.getSchema().getId();
+        Long productId = product.getId();
+
+        logger.info("Reserving product with ID: {} in inventory with ID: {}", productId, inventoryId);
+
+        changeProductStatus(inventoryId, schemaId, productId, ProductStatus.RESERVED);
+    }
+
+    @Transactional
+    public List<Product> reserveProdByProdSupplName(Inventory inventory, ProductSchema schema, int quantity) {
+        Long inventoryId = inventory.getId();
+        Long schemaId = schema.getId();
+
+        // Validate inventory and schema
+        validateProductSchema(inventoryId, schemaId);
+        validatePositiveQuantity(quantity);
+
+        if (!hasAvailableStock(inventoryId, schemaId, quantity)) {
+            throw new TooLargeOrderException("Not enough stock for product name: " + schema.getName() +
+                    " supplier name: " + inventory.getSupplier().getName() + ". Requested quantity: " + quantity +
+                    ", available stock: " + getCurrentStock(inventoryId, schemaId));
+        }
+
+        return reserveProducts(inventoryId, schemaId, quantity);
+    }
+
+    @Transactional
+    public List<Product> reserveProdByProdName(Inventory inventory, ProductSchema schema, int quantity) {
+        Long inventoryId = inventory.getId();
+        Long schemaId = schema.getId();
+
+        //validateProductSchema(inventoryId, schemaId);
+        int neededStockSize = min(quantity, getCurrentStock(inventoryId, schemaId));
+
+        return reserveProducts(inventoryId, schemaId, neededStockSize);
+    }
+
+    @Transactional
+    public void freeProducts(List<Product> products) {
+        products.forEach(product -> {
+            Long inventoryId = getInventoryBySupplierId(product.getSupplierId()).getId();
+            Long schemaId = product.getSchema().getId();
+            Long productId = product.getId();
+
+            changeProductStatus(inventoryId, schemaId, productId, ProductStatus.FREE);
+        });
+    }
+
+    @Transactional
+    public void removeCompletedOrderProducts(List<Product> orderProducts) {
+        orderProducts.forEach(orderProduct -> {
+            Long inventoryId = getInventoryBySupplierId(orderProduct.getSupplierId()).getId();
+            Long schemaId = orderProduct.getSchema().getId();
+
+            // Access the list of products in stock for the specific inventory and schema
+            List<Product> stockProducts = stock.getOrDefault(inventoryId, new HashMap<>()).get(schemaId);
+
+            if (stockProducts != null) {
+                // Update the product status in the in-memory structure
+                stockProducts.stream()
+                        .filter(product -> product.getId().equals(orderProduct.getId()))
+                        .forEach(product -> product.setStatus(ProductStatus.REMOVED));
+
+                if (stockProducts.stream().noneMatch(product -> product.getStatus() == ProductStatus.FREE)) {
+                    logger.info("No available products remaining for schema ID {} in inventory ID {}", schemaId, inventoryId);
+                }
+
+                // Mark product as removed
+                orderProduct.setStatus(ProductStatus.REMOVED);
+                productRepository.save(orderProduct);
+
+                logger.info("Marked product with ID {} as removed from inventory ID {}", orderProduct.getId(), inventoryId);
+            }
+        });
+
+        logger.info("Marked {} products as removed from inventory based on completed order.", orderProducts.size());
+    }
+
+
+    @Transactional
+    protected void changeProductStatus(Long inventoryId, Long schemaId, Long productId, ProductStatus status) {
+        List<Product> products = stock.get(inventoryId).get(schemaId);
+
+        products.stream()
+                .filter(p -> p.getId().equals(productId))
+                .findFirst()
+                .ifPresent(p -> {
+                    p.setStatus(status);
+                    productRepository.save(p);
+                });
+    }
+
+    private List<Product> reserveProducts(Long inventoryId, Long schemaId, int quantity) {
+        List<Product> products = stock.get(inventoryId).get(schemaId);
+
+        List<Product> productsToReserve = selectCTENonReservedProducts(products, quantity);
+
+        // Reserve the selected products
+        productsToReserve.forEach(product -> {
+            product.setStatus(ProductStatus.RESERVED);
+            productRepository.save(product);
+        });
+
+        return productsToReserve;
+    }
+
     private void validateSupplierExists(MyUser user) {
         if (user.getSupplier() == null) {
             logger.error("User '{}' does not have a supplier", user.getUsername());
@@ -244,10 +371,10 @@ public class InventoryService {
         }
     }
 
-    private int validatePositiveQuantity(int quantity) {
+    public int validatePositiveQuantity(int quantity) {
         if (quantity <= 0) {
             logger.error("Invalid stock quantity: {}. Quantity must be greater than zero.", quantity);
-            throw new NonGreaterThanZeroProductStockAddException("Requested quantity: " + quantity + ", it must be greater than zero.");
+            throw new NonGreaterThanZeroQuantityException("Requested quantity: " + quantity + ", it must be greater than zero.");
         }
         return quantity;
     }
@@ -268,11 +395,12 @@ public class InventoryService {
         }
     }
 
-    private List<Product> createProductsToAdd(CreateProductStockRequest request, int quantity, ProductSchema productSchema) {
+    private List<Product> createProductsToAdd(CreateProductStockRequest request, int quantity, ProductSchema productSchema, Inventory inventory) {
         List<Product> products = new ArrayList<>();
         for (int i = 0; i < quantity; i++) {
             products.add(Product.builder()
                     .schema(productSchema)
+                    .supplierId(inventory.getSupplier().getId())
                     .description(request.getDescription())
                     .status(ProductStatus.FREE)
                     .expiresAt(request.getExpiresAt())
@@ -281,7 +409,7 @@ public class InventoryService {
         return products;
     }
 
-    private void addStock(Long inventoryId, Long productSchemaId, List<Product> productsToAdd) {
+    private void addToInMemoryStock(Long inventoryId, Long productSchemaId, List<Product> productsToAdd) {
         if (!stock.containsKey(inventoryId)) {
             stock.put(inventoryId, new HashMap<>());
         }
@@ -293,37 +421,44 @@ public class InventoryService {
         stock.get(inventoryId).get(productSchemaId).addAll(productsToAdd);
     }
 
-    private void removeStock(Long inventoryId, Long productSchemaId, List<Product> productsToRemove) {
-        stock.get(inventoryId).get(productSchemaId).removeAll(productsToRemove);
-
-        if (stock.get(inventoryId).get(productSchemaId).isEmpty()) {
-            stock.get(inventoryId).remove(productSchemaId);
-        }
-    }
-
-    private int getCurrentStock(Long inventoryId, Long productSchemaId) {
-        if (!stock.get(inventoryId).containsKey(productSchemaId)) {
+    public int getCurrentStock(Long inventoryId, Long productSchemaId) {
+        if (!stock.containsKey(inventoryId) || !stock.get(inventoryId).containsKey(productSchemaId)) {
             return 0;
         }
-        return stock.get(inventoryId).get(productSchemaId).size();
+
+        // Filter out reserved products and count only non-reserved products
+        return (int) stock.get(inventoryId).get(productSchemaId).stream()
+                .filter(product -> product.getStatus() == ProductStatus.FREE)
+                .count();
     }
 
     private boolean hasAvailableStock(Long inventoryId, Long productSchemaId, int quantity) {
         return getCurrentStock(inventoryId, productSchemaId) >= quantity;
     }
 
+    private List<Product> selectCTENonReservedProducts(List<Product> products, int quantity) {
+        return products.stream()
+                .filter(product -> product.getStatus() != ProductStatus.RESERVED)
+                .limit(quantity)
+                .collect(Collectors.toList());
+    }
+
+    public Product getSoonestExpiryProduct(Inventory inventory, ProductSchema schema) {
+        // Fetch all products of the specified schema in the inventory
+        List<Product> products = stock.get(inventory.getId()).get(schema.getId());
+
+        // Filter out reserved products and find the product with the closest expiry date
+        return products.stream()
+                .filter(product -> product.getStatus() != ProductStatus.RESERVED)
+                .min(Comparator.comparing(Product::getExpiresAt))
+                .orElseThrow(() -> new ProductNotFoundException("No available products with schema ID " + schema.getId() + " in inventory ID " + inventory.getId()));
+    }
+
     private List<Product> createProductsToRemoveForNearExpiryStock(Long inventoryId, Long productSchemaId, int quantity) {
         Map<Long, List<Product>> inventoryStock = stock.get(inventoryId);
         List<Product> inventoryProducts = inventoryStock.get(productSchemaId);
 
-        // Sort products by expiry date in ascending order (earliest expiry first)
-        inventoryProducts.sort(Comparator.comparing(Product::getExpiresAt));
-
-        List<Product> productsToRemove = new ArrayList<>();
-        for (int i = 0; i < quantity; i++) {
-            Product product = inventoryProducts.remove(0);
-            productsToRemove.add(product);
-        }
+        List<Product> productsToRemove = selectCTENonReservedProducts(inventoryProducts, quantity);
 
         // TODO or maybe dont remove it and let size be one, but it would require other code changes as well
         if (inventoryProducts.isEmpty()) {

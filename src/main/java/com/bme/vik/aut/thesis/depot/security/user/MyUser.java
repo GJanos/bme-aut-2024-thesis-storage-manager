@@ -23,7 +23,7 @@ public class MyUser implements UserDetails {
 
     @Id
     @GeneratedValue
-    private Integer id;
+    private Long id;
 
     private String userName;
     private String password;
