@@ -18,7 +18,7 @@ spring:
     database: POSTGRESQL
     show-sql: true
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update #create-drop
   sql:
     init:
       platform: postgres
@@ -35,3 +35,11 @@ springdoc:
   api-docs:
     enabled: true
     path: /v3/api-docs
+
+custom:
+  inventory:
+    max-depot-space: 10000
+    max-inventory-space: 1000
+    auto-reorder: true
+    low-stock-alert: true
+    expiration-alert: true

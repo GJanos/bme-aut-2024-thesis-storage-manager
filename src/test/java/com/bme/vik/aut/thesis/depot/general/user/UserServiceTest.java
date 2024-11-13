@@ -1,7 +1,7 @@
 package com.bme.vik.aut.thesis.depot.general.user;
 
-import com.bme.vik.aut.thesis.depot.exception.UserNameAlreadyExistsException;
-import com.bme.vik.aut.thesis.depot.exception.UserNotFoundByIDException;
+import com.bme.vik.aut.thesis.depot.exception.user.UserNameAlreadyExistsException;
+import com.bme.vik.aut.thesis.depot.exception.user.UserNotFoundByIDException;
 import com.bme.vik.aut.thesis.depot.general.user.dto.UserModifyRequest;
 import com.bme.vik.aut.thesis.depot.general.user.dto.UserResponse;
 import com.bme.vik.aut.thesis.depot.security.user.MyUser;
@@ -112,7 +112,7 @@ class UserServiceTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenInvalidIdProvided() {
+    void shouldThrowExceptionWhenRequestingUserAndInvalidIdProvided() {
         //***** <-- given: Invalid user ID --> *****//
         int invalidUserId = -1;
         when(userRepository.findById(invalidUserId)).thenReturn(Optional.empty());

@@ -1,7 +1,7 @@
 package com.bme.vik.aut.thesis.depot.security.auth;
 
-import com.bme.vik.aut.thesis.depot.exception.UserNameAlreadyExistsException;
-import com.bme.vik.aut.thesis.depot.exception.UserNameOrPasswordIsEmptyException;
+import com.bme.vik.aut.thesis.depot.exception.user.UserNameAlreadyExistsException;
+import com.bme.vik.aut.thesis.depot.exception.user.UserNameOrPasswordIsEmptyException;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.AuthRequest;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.AuthResponse;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.RegisterRequest;
@@ -43,7 +43,7 @@ public class AuthService {
             throw new UserNameAlreadyExistsException("Username already exists");
         }
 
-        var user = MyUser.builder()
+        MyUser user = MyUser.builder()
                 .userName(request.getUserName())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.USER)

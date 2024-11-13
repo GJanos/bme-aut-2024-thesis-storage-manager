@@ -1,6 +1,6 @@
 package com.bme.vik.aut.thesis.depot.general.info;
 
-import com.bme.vik.aut.thesis.depot.exception.UserNotFoundByIDException;
+import com.bme.vik.aut.thesis.depot.exception.user.UserNotFoundByIDException;
 import com.bme.vik.aut.thesis.depot.general.user.dto.UserResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

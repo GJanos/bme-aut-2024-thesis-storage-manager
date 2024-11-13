@@ -1,5 +1,6 @@
-package com.bme.vik.aut.thesis.depot.general.admin;
+package com.bme.vik.aut.thesis.depot.general.supplier.product;
 
+import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchema;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,27 +10,29 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductSchema {
+public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    @ManyToOne
+    @JoinColumn(name = "schema_id", nullable = false)
+    private ProductSchema schema;
 
-    private double storageSpaceNeeded; // Space needed in the inventory
+    private String description;
 
-    @ElementCollection
-    @CollectionTable(name = "product_category_mapping", joinColumns = @JoinColumn(name = "product_schema_id"))
-    @Column(name = "category_id")
-    private List<Long> categoryIDs;
+    @Enumerated(EnumType.STRING)
+    private ProductStatus status;
+
+    private LocalDateTime expiresAt;
+    // TODO custom validation for expiry date
 
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
@@ -38,4 +41,3 @@ public class ProductSchema {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 }
-

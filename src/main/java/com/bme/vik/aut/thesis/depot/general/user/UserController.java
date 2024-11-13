@@ -1,12 +1,11 @@
 package com.bme.vik.aut.thesis.depot.general.user;
 
-import com.bme.vik.aut.thesis.depot.exception.UserNotFoundByIDException;
+import com.bme.vik.aut.thesis.depot.exception.user.UserNotFoundByIDException;
 import com.bme.vik.aut.thesis.depot.general.user.dto.UserModifyRequest;
 import com.bme.vik.aut.thesis.depot.general.user.dto.UserResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;

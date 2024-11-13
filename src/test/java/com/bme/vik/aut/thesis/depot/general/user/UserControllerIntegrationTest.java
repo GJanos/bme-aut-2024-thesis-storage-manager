@@ -226,6 +226,7 @@ class UserControllerIntegrationTest {
                     assertEquals("User with ID " + invalidId + " not found", responseMap.get("error"));
                 });
     }
+    // todo add test for updating user with duplicated username
 
     @Test
     void shouldDeleteUserById() {

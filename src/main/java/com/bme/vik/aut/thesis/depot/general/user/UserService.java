@@ -1,6 +1,6 @@
 package com.bme.vik.aut.thesis.depot.general.user;
 
-import com.bme.vik.aut.thesis.depot.exception.UserNotFoundByIDException;
+import com.bme.vik.aut.thesis.depot.exception.user.UserNotFoundByIDException;
 import com.bme.vik.aut.thesis.depot.general.user.dto.UserModifyRequest;
 import com.bme.vik.aut.thesis.depot.general.user.dto.UserResponse;
 

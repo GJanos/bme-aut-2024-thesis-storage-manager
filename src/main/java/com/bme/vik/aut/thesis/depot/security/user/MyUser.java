@@ -1,5 +1,7 @@
 package com.bme.vik.aut.thesis.depot.security.user;
 
+import com.bme.vik.aut.thesis.depot.general.supplier.supplier.Supplier;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +31,10 @@ public class MyUser implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonBackReference
+    private Supplier supplier;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
@@ -48,6 +54,10 @@ public class MyUser implements UserDetails {
     @Override
     public String getPassword() {
         return password;
+    }
+
+    public Long getSupplierId() {
+        return supplier.getId();
     }
 
     @Override

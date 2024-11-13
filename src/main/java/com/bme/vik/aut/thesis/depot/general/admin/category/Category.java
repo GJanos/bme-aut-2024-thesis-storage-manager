@@ -1,4 +1,4 @@
-package com.bme.vik.aut.thesis.depot.general.admin;
+package com.bme.vik.aut.thesis.depot.general.admin.category;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -25,6 +25,7 @@ public class Category {
 
     private String description;
 
+    //TODO check creation and update timestamp in tests
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;
