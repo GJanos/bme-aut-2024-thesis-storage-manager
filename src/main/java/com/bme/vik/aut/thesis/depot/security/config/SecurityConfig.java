@@ -4,6 +4,7 @@ import com.bme.vik.aut.thesis.depot.security.jwt.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -33,7 +34,6 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
-    // TODO: implement logout, private final LogoutHandler logoutHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -43,24 +43,19 @@ public class SecurityConfig {
                 .authorizeHttpRequests(req ->
                         req.requestMatchers(WHITE_LIST_URL)
                                 .permitAll()
+                                .requestMatchers("/user/**").hasRole(ADMIN.name())
                                 .requestMatchers("/admin/**").hasRole(ADMIN.name())
-                                .requestMatchers("/user/**").hasAnyRole(ADMIN.name())
+                                .requestMatchers("/report/**").hasRole(ADMIN.name())
                                 .requestMatchers("/info/**").hasAnyAuthority(USER_READ.getPermission())
-                                // more granular permissions...
-//                                .requestMatchers("/order/**").hasAnyAuthority(USER_CREATE.getPermission())
-//                                .requestMatchers("/supplier/**").hasRole(SUPPLIER.name())
+                                .requestMatchers(HttpMethod.POST, "/order").hasAnyAuthority(USER_CREATE.getPermission())
+                                .requestMatchers("/order/**").hasRole(ADMIN.name())
+                                .requestMatchers("/supplier/**").hasRole(SUPPLIER.name())
                                 .anyRequest()
                                 .authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-// TODO:                .logout(logout ->
-//                        logout.logoutUrl("/api/v1/auth/logout")
-//                                .addLogoutHandler(logoutHandler)
-//                                .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext())
-//                )
-        ;
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

@@ -35,6 +35,9 @@ public class Product {
     @Enumerated(EnumType.STRING)
     private ProductStatus status;
 
+    @Enumerated(EnumType.STRING)
+    private ExpiryStatus expiryStatus;
+
     private LocalDateTime expiresAt;
 
     @Column(nullable = false, updatable = false)

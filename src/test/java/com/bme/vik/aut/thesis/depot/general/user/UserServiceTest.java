@@ -38,7 +38,7 @@ class UserServiceTest {
     private ModelMapper modelMapper;
 
     @InjectMocks
-    private UserServiceImpl userService;
+    private UserService userService;
 
     @Test
     void shouldReturnEmptyUserListWhenNoUsersExist() {
@@ -57,8 +57,8 @@ class UserServiceTest {
     void shouldReturnAllUsersWhenMultipleUsersExist() {
         //***** <-- given: Multiple users in repository --> *****//
         List<MyUser> mockUsers = List.of(
-                MyUser.builder().id(1).userName("user1").password("password1").role(Role.USER).build(),
-                MyUser.builder().id(2).userName("user2").password("password2").role(Role.USER).build()
+                MyUser.builder().id(1L).userName("user1").password("password1").role(Role.USER).build(),
+                MyUser.builder().id(2L).userName("user2").password("password2").role(Role.USER).build()
         );
         when(userRepository.findAll()).thenReturn(mockUsers);
 
@@ -73,7 +73,7 @@ class UserServiceTest {
     @Test
     void shouldReturnUserByIdWhenValidIdProvided() {
         //***** <-- given: User with valid ID --> *****//
-        int userId = 1;
+        Long userId = 1L;
         String userName = "user1";
         String password = "password1";
 
@@ -114,7 +114,7 @@ class UserServiceTest {
     @Test
     void shouldThrowExceptionWhenRequestingUserAndInvalidIdProvided() {
         //***** <-- given: Invalid user ID --> *****//
-        int invalidUserId = -1;
+        Long invalidUserId = -1L;
         when(userRepository.findById(invalidUserId)).thenReturn(Optional.empty());
 
         //***** <-- when & then: Attempt to retrieve user by invalid ID --> *****//
@@ -126,7 +126,7 @@ class UserServiceTest {
     @Test
     void shouldUpdateUserSuccessfullyWhenValidIdProvided() {
         //***** <-- given: Existing user with valid ID --> *****//
-        int userId = 1;
+        Long userId = 1L;
         String userName = "user1";
         String password = "password1";
         String newUserName = "newUser";
@@ -204,7 +204,7 @@ class UserServiceTest {
     @Test
     void shouldThrowExceptionWhenUpdatingUserWithInvalidId() {
         //***** <-- given: Non-existent user ID --> *****//
-        int nonExistentUserId = 999;
+        Long nonExistentUserId = 999L;
         UserModifyRequest updateRequest = UserModifyRequest.builder().userName("newUser").password("newPassword").build();
 
         when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
@@ -219,7 +219,7 @@ class UserServiceTest {
     @Test
     void shouldThrowExceptionWhenUpdatingUserWithDuplicateUserName() {
         //***** <-- given: Existing username in another user --> *****//
-        int userId = 1;
+        Long userId = 1L;
         MyUser existingUser = MyUser.builder().id(userId).userName("user1").password("password1").role(Role.USER).build();
         UserModifyRequest updateRequest = new UserModifyRequest("existingUser", "newPassword");
 
@@ -236,7 +236,7 @@ class UserServiceTest {
     @Test
     void shouldDeleteUserByIdWhenValidIdProvided() {
         //***** <-- given: Existing user ID --> *****//
-        int userId = 1;
+        Long userId = 1L;
         MyUser existingUser = MyUser.builder().id(userId).userName("user1").password("password1").role(Role.USER).build();
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
@@ -253,7 +253,7 @@ class UserServiceTest {
     @Test
     void shouldThrowExceptionWhenDeletingUserWithInvalidId() {
         //***** <-- given: Non-existent user ID --> *****//
-        int nonExistentUserId = 999;
+        Long nonExistentUserId = 999L;
 
         when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
 

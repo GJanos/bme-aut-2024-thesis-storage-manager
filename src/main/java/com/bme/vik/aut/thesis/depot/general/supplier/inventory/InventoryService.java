@@ -1,15 +1,19 @@
 package com.bme.vik.aut.thesis.depot.general.supplier.inventory;
 
+import com.bme.vik.aut.thesis.depot.exception.inventory.DepotFullException;
 import com.bme.vik.aut.thesis.depot.exception.inventory.InventoryFullException;
 import com.bme.vik.aut.thesis.depot.exception.inventory.InventoryNotFoundException;
 import com.bme.vik.aut.thesis.depot.exception.inventory.InventoryOutOfStockException;
-import com.bme.vik.aut.thesis.depot.exception.order.TooLargeOrderException;
 import com.bme.vik.aut.thesis.depot.exception.product.InvalidProductExpiryException;
 import com.bme.vik.aut.thesis.depot.exception.product.ProductNotFoundException;
 import com.bme.vik.aut.thesis.depot.exception.supplier.NonGreaterThanZeroQuantityException;
 import com.bme.vik.aut.thesis.depot.exception.user.UserSupplierNotFoundException;
 import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchema;
 import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchemaService;
+import com.bme.vik.aut.thesis.depot.general.alert.AlertService;
+import com.bme.vik.aut.thesis.depot.general.report.ReportService;
+import com.bme.vik.aut.thesis.depot.general.report.dto.InventoryState;
+import com.bme.vik.aut.thesis.depot.general.supplier.product.ExpiryStatus;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.Product;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductRepository;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductStatus;
@@ -19,6 +23,7 @@ import com.bme.vik.aut.thesis.depot.general.supplier.product.dto.RemoveProductSt
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.SupplierRepository;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.dto.CreateSupplierRequest;
 import com.bme.vik.aut.thesis.depot.security.user.MyUser;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,28 +41,35 @@ import static java.lang.Math.min;
 @RequiredArgsConstructor
 public class InventoryService {
 
-    @Value("${custom.inventory.max-inventory-space}")
-    private int MAX_AVAILABLE_SPACE;
-
-    @Value("${custom.inventory.auto-reorder}")
-    private boolean AUTO_REORDER_ENABLED;
-
-    @Value("${custom.inventory.low-stock-alert}")
-    private boolean LOW_STOCK_ALERT_ENABLED;
-
-// TODO do this later use a timeservice class
-//    @Value("${custom.inventory.expiry-alert}")
-//    private boolean EXPIRY_ALERT_ENABLED;
-
     private static final Logger logger = LoggerFactory.getLogger(InventoryService.class);
+
+    @Value("${custom.inventory.max-depot-space}")
+    private int AVAILABLE_DEPOT_SPACE_FOR_NEW_INVENTORY;
+
+    @Value("${custom.inventory.max-inventory-space}")
+    private int MAX_AVAILABLE_INVENTORY_SPACE;
+
+    @Value("${custom.inventory.should-check-expiration}")
+    private boolean SHOULD_CHECK_EXPIRATION;
 
     private final InventoryRepository inventoryRepository;
     private final ProductRepository productRepository;
     private final ProductSchemaService productSchemaService;
     private final SupplierRepository supplierRepository;
+    private final AlertService alertService;
+    private final ReportService reportService;
 
     // { K: InventoryID, V: { K: ProductSchemaID, V: List<Product> } }
-    private Map<Long, Map<Long, List<Product>>> stock = new HashMap<>();
+    private final Map<Long, Map<Long, List<Product>>> stock = new HashMap<>();
+
+    @PostConstruct
+    public void init() {
+        alertService.setInventoryService(this);
+    }
+
+    public void clearStock() {
+        stock.clear();
+    }
 
     @Transactional
     public void initializeStockForAllInventories() {
@@ -65,6 +77,7 @@ public class InventoryService {
             Inventory inventory = supplier.getInventory();
             Long inventoryId = inventory.getId();
             List<Long> productIds = inventory.getProductIds();
+            AVAILABLE_DEPOT_SPACE_FOR_NEW_INVENTORY -= inventory.getMaxAvailableSpace();
 
             if (productIds != null && !productIds.isEmpty()) {
                 Map<Long, List<Product>> inventoryStock = new HashMap<>();
@@ -84,11 +97,19 @@ public class InventoryService {
     }
 
     public Inventory createInventory(CreateSupplierRequest request) {
-        logger.info("Creating new inventory for supplier with initial max space: {}", MAX_AVAILABLE_SPACE);
+        logger.info("Creating new inventory for supplier with initial max space: {}", MAX_AVAILABLE_INVENTORY_SPACE);
+
+        if (AVAILABLE_DEPOT_SPACE_FOR_NEW_INVENTORY - MAX_AVAILABLE_INVENTORY_SPACE <= 0) {
+            String errorMsg = "Not enough space in depot for new inventory. Available space: " + AVAILABLE_DEPOT_SPACE_FOR_NEW_INVENTORY + ", requested space: " + MAX_AVAILABLE_INVENTORY_SPACE;
+            logger.error(errorMsg);
+            throw new DepotFullException(errorMsg);
+        }
+
+        AVAILABLE_DEPOT_SPACE_FOR_NEW_INVENTORY -= MAX_AVAILABLE_INVENTORY_SPACE;
 
         Inventory inventory = Inventory.builder()
                 .usedSpace(0)
-                .maxAvailableSpace(MAX_AVAILABLE_SPACE)
+                .maxAvailableSpace(MAX_AVAILABLE_INVENTORY_SPACE)
                 .lowStockAlertThreshold(request.getLowStockAlertThreshold())
                 .expiryAlertThreshold(request.getExpiryAlertThreshold())
                 .reorderThreshold(request.getReorderThreshold())
@@ -109,6 +130,21 @@ public class InventoryService {
         logger.info("Inventory with ID {} updated successfully", inventory.getId());
 
         return inventory;
+    }
+
+    public Inventory getInventoryById(Long inventoryId) {
+        logger.info("Fetching inventory by ID: {}", inventoryId);
+        return inventoryRepository.findById(inventoryId)
+                .orElseThrow(() -> new InventoryNotFoundException("Inventory with ID " + inventoryId + " not found"));
+    }
+
+    public InventoryState getInventoryStateBySupplierId(Long supplierId) {
+        logger.info("Fetching inventory state by supplier ID: {}", supplierId);
+
+        Inventory inventory = inventoryRepository.findBySupplierId(supplierId)
+                .orElseThrow(() -> new InventoryNotFoundException("Inventory for supplier with ID " + supplierId + " not found"));
+
+        return reportService.mapToInventoryState(inventory);
     }
 
     public Inventory getInventoryBySupplierId(Long supplierId) {
@@ -137,7 +173,9 @@ public class InventoryService {
         Inventory inventory = getInventoryBySupplierId(supplierId);
         Long inventoryId = inventory.getId();
 
-        validateExpiryDate(request.getExpiresAt(), inventory);
+        if (SHOULD_CHECK_EXPIRATION) {
+            validateExpiryDate(request.getExpiresAt(), inventory);
+        }
 
         ProductSchema productSchema = productSchemaService.getProductSchemaById(request.getProductSchemaId());
         Long productSchemaId = productSchema.getId();
@@ -151,7 +189,6 @@ public class InventoryService {
         // handle inventory full
         int fullSpaceNeeded = quantity * productSchema.getStorageSpaceNeeded();
         if (!inventory.hasAvailableSpace(fullSpaceNeeded)) {
-            // TODO: emit inventory full
             int availableSpace = inventory.getMaxAvailableSpace() - inventory.getUsedSpace();
             String errorMsg = "Not enough space in inventory for supplier ID: " + supplierId + ". Available space: " + availableSpace + ", requested space: " + fullSpaceNeeded;
             logger.error(errorMsg);
@@ -178,8 +215,6 @@ public class InventoryService {
                 .build();
     }
 
-    // TODO remove stock has to account for reserved stock as well!!!
-    // !!!!!!!!!!!!!!!!!
     @Transactional
     public ProductStockResponse removeStock(MyUser user, RemoveProductStockRequest request) {
         // validate request
@@ -202,7 +237,6 @@ public class InventoryService {
         logger.info("User '{}' with supplier ID: {} is removing: {} stock of: {}", username, supplierId, quantity, productName);
 
         if (!hasAvailableStock(inventoryId, productSchemaId, quantity)) {
-            // TODO: emit inventory out of stock
             String errorMsg = "Too few stock of: " + productName + " in inventory for supplier ID: " + supplierId + ". Available stock: " + getCurrentStock(inventoryId, productSchemaId) + ", requested: " + quantity;
             logger.error(errorMsg);
             throw new InventoryOutOfStockException(errorMsg);
@@ -218,15 +252,7 @@ public class InventoryService {
 
         logger.info("Stock successfully removed from inventory of supplier with ID: {} Stock-remove size: {}", supplierId, quantity);
 
-        if (AUTO_REORDER_ENABLED && needsReorderForStock(inventory, productSchemaId)) {
-            logger.info("Reordering {} stock of: {} for supplier with ID: {}", inventory.getReorderQuantity(), productName, supplierId);
-            // TODO: emit reorder event which actually replenishes the stock
-        }
-
-        if (LOW_STOCK_ALERT_ENABLED && lowOnStock(inventory, productSchemaId)) {
-            logger.info("Low stock alert for: {} for supplier with ID: {}", productName, supplierId);
-            // TODO: emit low stock alert event which does something
-        }
+        // supplier removed its own stock, so no need to check for reorder or low stock alert
 
         return ProductStockResponse.builder()
                 .productSchemaId(productSchemaId)
@@ -256,7 +282,7 @@ public class InventoryService {
     }
 
     @Transactional
-    public void reserveProduct(Inventory inventory, Product product) {
+    public void reserveOneProduct(Inventory inventory, Product product) {
         Long inventoryId = inventory.getId();
         Long schemaId = product.getSchema().getId();
         Long productId = product.getId();
@@ -271,15 +297,7 @@ public class InventoryService {
         Long inventoryId = inventory.getId();
         Long schemaId = schema.getId();
 
-        // Validate inventory and schema
         validateProductSchema(inventoryId, schemaId);
-        validatePositiveQuantity(quantity);
-
-        if (!hasAvailableStock(inventoryId, schemaId, quantity)) {
-            throw new TooLargeOrderException("Not enough stock for product name: " + schema.getName() +
-                    " supplier name: " + inventory.getSupplier().getName() + ". Requested quantity: " + quantity +
-                    ", available stock: " + getCurrentStock(inventoryId, schemaId));
-        }
 
         return reserveProducts(inventoryId, schemaId, quantity);
     }
@@ -289,7 +307,8 @@ public class InventoryService {
         Long inventoryId = inventory.getId();
         Long schemaId = schema.getId();
 
-        //validateProductSchema(inventoryId, schemaId);
+        validateProductSchema(inventoryId, schemaId);
+
         int neededStockSize = min(quantity, getCurrentStock(inventoryId, schemaId));
 
         return reserveProducts(inventoryId, schemaId, neededStockSize);
@@ -304,6 +323,8 @@ public class InventoryService {
 
             changeProductStatus(inventoryId, schemaId, productId, ProductStatus.FREE);
         });
+
+        logger.info("Freed {} products", products.size());
     }
 
     @Transactional
@@ -311,34 +332,31 @@ public class InventoryService {
         orderProducts.forEach(orderProduct -> {
             Long inventoryId = getInventoryBySupplierId(orderProduct.getSupplierId()).getId();
             Long schemaId = orderProduct.getSchema().getId();
+            Long productId = orderProduct.getId();
 
-            // Access the list of products in stock for the specific inventory and schema
-            List<Product> stockProducts = stock.getOrDefault(inventoryId, new HashMap<>()).get(schemaId);
-
-            if (stockProducts != null) {
-                // Update the product status in the in-memory structure
-                stockProducts.stream()
-                        .filter(product -> product.getId().equals(orderProduct.getId()))
-                        .forEach(product -> product.setStatus(ProductStatus.REMOVED));
-
-                if (stockProducts.stream().noneMatch(product -> product.getStatus() == ProductStatus.FREE)) {
-                    logger.info("No available products remaining for schema ID {} in inventory ID {}", schemaId, inventoryId);
-                }
-
-                // Mark product as removed
-                orderProduct.setStatus(ProductStatus.REMOVED);
-                productRepository.save(orderProduct);
-
-                logger.info("Marked product with ID {} as removed from inventory ID {}", orderProduct.getId(), inventoryId);
-            }
+            changeProductStatus(inventoryId, schemaId, productId, ProductStatus.REMOVED);
         });
 
         logger.info("Marked {} products as removed from inventory based on completed order.", orderProducts.size());
+
+        alertService.checkStockForReorder(stock);
     }
 
+    @Transactional
+    public void changeProductExpirationStatus(Long inventoryId, Long schemaId, Long productId, ExpiryStatus expiryStatus) {
+        List<Product> products = stock.get(inventoryId).get(schemaId);
+
+        products.stream()
+                .filter(p -> p.getId().equals(productId))
+                .findFirst()
+                .ifPresent(p -> {
+                    p.setExpiryStatus(expiryStatus);
+                    productRepository.save(p);
+                });
+    }
 
     @Transactional
-    protected void changeProductStatus(Long inventoryId, Long schemaId, Long productId, ProductStatus status) {
+    public void changeProductStatus(Long inventoryId, Long schemaId, Long productId, ProductStatus status) {
         List<Product> products = stock.get(inventoryId).get(schemaId);
 
         products.stream()
@@ -350,10 +368,18 @@ public class InventoryService {
                 });
     }
 
+    public int getCurrentStockBySchemaId(Long productSchemaId) {
+        return stock.values().stream()
+                .filter(schemaMap -> schemaMap.containsKey(productSchemaId))
+                .flatMap(schemaMap -> schemaMap.get(productSchemaId).stream())
+                .mapToInt(product -> product.getStatus() == ProductStatus.FREE ? 1 : 0)
+                .sum();
+    }
+
     private List<Product> reserveProducts(Long inventoryId, Long schemaId, int quantity) {
         List<Product> products = stock.get(inventoryId).get(schemaId);
 
-        List<Product> productsToReserve = selectCTENonReservedProducts(products, quantity);
+        List<Product> productsToReserve = selectCTEFreeProducts(products, quantity);
 
         // Reserve the selected products
         productsToReserve.forEach(product -> {
@@ -403,6 +429,7 @@ public class InventoryService {
                     .supplierId(inventory.getSupplier().getId())
                     .description(request.getDescription())
                     .status(ProductStatus.FREE)
+                    .expiryStatus(alertService.determineExpiryStatus(request.getExpiresAt(), inventory.getExpiryAlertThreshold()))
                     .expiresAt(request.getExpiresAt())
                     .build());
         }
@@ -436,9 +463,9 @@ public class InventoryService {
         return getCurrentStock(inventoryId, productSchemaId) >= quantity;
     }
 
-    private List<Product> selectCTENonReservedProducts(List<Product> products, int quantity) {
+    private List<Product> selectCTEFreeProducts(List<Product> products, int quantity) {
         return products.stream()
-                .filter(product -> product.getStatus() != ProductStatus.RESERVED)
+                .filter(product -> product.getStatus() == ProductStatus.FREE)
                 .limit(quantity)
                 .collect(Collectors.toList());
     }
@@ -447,9 +474,9 @@ public class InventoryService {
         // Fetch all products of the specified schema in the inventory
         List<Product> products = stock.get(inventory.getId()).get(schema.getId());
 
-        // Filter out reserved products and find the product with the closest expiry date
+        // Find the free product with the closest expiry date
         return products.stream()
-                .filter(product -> product.getStatus() != ProductStatus.RESERVED)
+                .filter(product -> product.getStatus() == ProductStatus.FREE)
                 .min(Comparator.comparing(Product::getExpiresAt))
                 .orElseThrow(() -> new ProductNotFoundException("No available products with schema ID " + schema.getId() + " in inventory ID " + inventory.getId()));
     }
@@ -458,20 +485,21 @@ public class InventoryService {
         Map<Long, List<Product>> inventoryStock = stock.get(inventoryId);
         List<Product> inventoryProducts = inventoryStock.get(productSchemaId);
 
-        List<Product> productsToRemove = selectCTENonReservedProducts(inventoryProducts, quantity);
+        List<Product> productsToRemove = selectCTEFreeProducts(inventoryProducts, quantity);
 
-        // TODO or maybe dont remove it and let size be one, but it would require other code changes as well
+        inventoryProducts.removeAll(productsToRemove);
+
         if (inventoryProducts.isEmpty()) {
             inventoryStock.remove(productSchemaId);
         }
         return productsToRemove;
     }
 
-    private boolean needsReorderForStock(Inventory inventory, Long productSchemaId) {
+    public boolean needsReorderForStock(Inventory inventory, Long productSchemaId) {
         return getCurrentStock(inventory.getId(), productSchemaId) <= inventory.getReorderThreshold();
     }
 
-    private boolean lowOnStock(Inventory inventory, Long productSchemaId) {
+    public boolean lowOnStock(Inventory inventory, Long productSchemaId) {
         return getCurrentStock(inventory.getId(), productSchemaId) <= inventory.getLowStockAlertThreshold();
     }
 }

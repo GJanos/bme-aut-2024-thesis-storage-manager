@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class COWProductId implements CreateOrderRequest {
     private Long productId;
-    private int quantity;
 
     @Override
     public String getProductName() {
@@ -21,5 +20,10 @@ public class COWProductId implements CreateOrderRequest {
     @Override
     public String getSupplierName() {
         return null;
+    }
+
+    @Override
+    public int getQuantity() {
+        return 1;
     }
 }

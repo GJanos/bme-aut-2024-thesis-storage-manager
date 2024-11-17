@@ -1,11 +1,9 @@
 package com.bme.vik.aut.thesis.depot.general.user;
 
-import com.bme.vik.aut.thesis.depot.TestUtilities;
+import com.bme.vik.aut.thesis.depot.general.util.TestUtil;
 import com.bme.vik.aut.thesis.depot.general.user.dto.UserModifyRequest;
 import com.bme.vik.aut.thesis.depot.general.user.dto.UserResponse;
 import com.bme.vik.aut.thesis.depot.security.auth.AuthService;
-import com.bme.vik.aut.thesis.depot.security.auth.dto.AuthRequest;
-import com.bme.vik.aut.thesis.depot.security.auth.dto.AuthResponse;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.RegisterRequest;
 import com.bme.vik.aut.thesis.depot.security.user.MyUser;
 import com.bme.vik.aut.thesis.depot.security.user.Role;
@@ -17,7 +15,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -65,28 +62,13 @@ class UserControllerIntegrationTest {
     @BeforeEach
     void setUp() {
         //***** <-- given --> *****//
-        // clear default CommandLineRunner admin user from database
-        userRepository.deleteAll();
-
-        // create and save the admin user for tests
-        MyUser adminUser = MyUser.builder()
-                .userName(adminUsername)
-                .password(passwordEncoder.encode(adminPassword))
-                .role(Role.ADMIN)
-                .build();
-
-        userRepository.save(adminUser);
-
-
-        /* Admin token is needed for acessing /user/** routes,
-        so we need to authenticate the admin user and store the token.
-         */
-        AuthRequest authRequest = AuthRequest.builder()
-                .userName(adminUsername)
-                .password(adminPassword)
-                .build();
-
-        ADMIN_TOKEN = authService.authenticate(authRequest).getToken();
+        ADMIN_TOKEN = TestUtil.createAndRegisterUser(
+                userRepository,
+                adminUsername,
+                adminPassword,
+                Role.ADMIN,
+                authService,
+                passwordEncoder);
     }
 
     @AfterEach
@@ -158,14 +140,14 @@ class UserControllerIntegrationTest {
                     assertEquals(userUsername, response.getUserName());
                     assertEquals(Role.USER, response.getRole());
 
-                    TestUtilities.assertCreatedAndUpdatedTimes(response.getCreatedAt(), response.getUpdatedAt());
+                    TestUtil.assertCreatedAndUpdatedTimes(response.getCreatedAt(), response.getUpdatedAt());
                 });
     }
 
     @Test
     void shouldNotGetUserByInvalidId() {
         //***** <-- given: Non-existing user ID --> *****//
-        int invalidId = 999;
+        Long invalidId = 999L;
 
         //***** <-- when & then: Attempt to get user by invalid ID --> *****//
         getUserById(invalidId)
@@ -212,7 +194,7 @@ class UserControllerIntegrationTest {
     @Test
     void shouldNotUpdateUserByInvalidId() {
         //***** <-- given: Non-existing user ID and update request --> *****//
-        int invalidId = 999;
+        Long invalidId = 999L;
 
         String updatedUserName = "updatedUser";
         String updatedPassword = "updatedPassword";
@@ -226,7 +208,6 @@ class UserControllerIntegrationTest {
                     assertEquals("User with ID " + invalidId + " not found", responseMap.get("error"));
                 });
     }
-    // todo add test for updating user with duplicated username
 
     @Test
     void shouldDeleteUserById() {
@@ -245,7 +226,7 @@ class UserControllerIntegrationTest {
     @Test
     void shouldNotDeleteUserByInvalidId() {
         //***** <-- given: Non-existing user ID --> *****//
-        int invalidId = 999;
+        Long invalidId = 999L;
         int numUsersBefore = userRepository.findAll().size();
 
         //***** <-- when & then: Attempt to delete user with invalid ID --> *****//
@@ -286,7 +267,7 @@ class UserControllerIntegrationTest {
                 .expectBodyList(UserResponse.class);
     }
 
-    WebTestClient.ResponseSpec getUserById(int id) {
+    WebTestClient.ResponseSpec getUserById(Long id) {
         return webTestClient
                 .get()
                 .uri(USER_PATH + "/" + id)
@@ -294,7 +275,7 @@ class UserControllerIntegrationTest {
                 .exchange();
     }
 
-    WebTestClient.ResponseSpec updateUserById(int id, String updatedUserName, String updatedPassword) {
+    WebTestClient.ResponseSpec updateUserById(Long id, String updatedUserName, String updatedPassword) {
         UserModifyRequest updateRequest = UserModifyRequest.builder()
                 .userName(updatedUserName)
                 .password(updatedPassword)
@@ -308,7 +289,7 @@ class UserControllerIntegrationTest {
                 .exchange();
     }
 
-    WebTestClient.ResponseSpec deleteUserById(int id) {
+    WebTestClient.ResponseSpec deleteUserById(Long id) {
         return webTestClient
                 .delete()
                 .uri(USER_PATH + "/" + id)

@@ -1,13 +1,10 @@
 package com.bme.vik.aut.thesis.depot.security.auth;
 
-import com.bme.vik.aut.thesis.depot.TestUtilities;
+import com.bme.vik.aut.thesis.depot.general.util.TestUtil;
 import com.bme.vik.aut.thesis.depot.general.user.UserRepository;
-import com.bme.vik.aut.thesis.depot.general.user.dto.UserResponse;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.AuthRequest;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.AuthResponse;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.RegisterRequest;
-import com.bme.vik.aut.thesis.depot.security.config.SecurityConfig;
-import com.bme.vik.aut.thesis.depot.security.jwt.JwtAuthFilter;
 import com.bme.vik.aut.thesis.depot.security.jwt.JwtTokenService;
 import com.bme.vik.aut.thesis.depot.security.user.MyUser;
 import com.bme.vik.aut.thesis.depot.security.user.Role;
@@ -16,21 +13,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -77,7 +67,7 @@ class AuthControllerIntegrationTest {
         assertEquals(Role.USER, newUser.get().getRole());
 
         // Validate created and updated timestamps
-        TestUtilities.assertCreatedAndUpdatedTimes(newUser.get().getCreatedAt(), newUser.get().getUpdatedAt());
+        TestUtil.assertCreatedAndUpdatedTimes(newUser.get().getCreatedAt(), newUser.get().getUpdatedAt());
 
         // Validate token
         assertTrue(jwtTokenService.isTokenValid(authResponse.getToken(), newUser.get()));

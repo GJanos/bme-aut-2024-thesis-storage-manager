@@ -25,7 +25,6 @@ public class Category {
 
     private String description;
 
-    //TODO check creation and update timestamp in tests
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;

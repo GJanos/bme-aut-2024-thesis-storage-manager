@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,9 @@ import java.util.stream.Collectors;
 public class SupplierService {
 
     private static final Logger logger = LoggerFactory.getLogger(SupplierService.class);
+
+    @Value("${custom.supplier.generate-random-password}")
+    private boolean SHOULD_GENERATE_RANDOM_PASSWORD;
 
     private final InventoryService inventoryService;
     private final SupplierRepository supplierRepository;
@@ -70,10 +74,12 @@ public class SupplierService {
                 .inventory(inventory)
                 .build();
 
-        // Create Supplier user
-        String randomPassword = "password";
-        // TODO here
-        //String randomPassword = generateRandomSupplierUserPassword();
+        String randomPassword;
+        if (SHOULD_GENERATE_RANDOM_PASSWORD) {
+            randomPassword = generateRandomSupplierUserPassword();
+        } else {
+            randomPassword = "password";
+        }
 
         MyUser user = MyUser.builder()
                 .userName(supplier.getName())

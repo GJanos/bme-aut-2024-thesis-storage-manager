@@ -1,5 +1,6 @@
 package com.bme.vik.aut.thesis.depot.general.supplier.supplier;
 
+import com.bme.vik.aut.thesis.depot.general.report.dto.InventoryState;
 import com.bme.vik.aut.thesis.depot.general.supplier.inventory.Inventory;
 import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryService;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.Product;
@@ -38,15 +39,15 @@ public class SupplierStockController {
                     @ApiResponse(
                             responseCode = "200",
                             description = "Inventory fetched successfully",
-                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = Inventory.class))
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = InventoryState.class))
                     )
             }
     )
     @GetMapping("/inventory")
     @PreAuthorize("hasAuthority('supplier:read')")
-    public ResponseEntity<Inventory> getInventory(@AuthenticationPrincipal MyUser userPrincipal) {
-        Inventory inventory = inventoryService.getInventoryBySupplierId(userPrincipal.getSupplierId());
-        return ResponseEntity.ok(inventory);
+    public ResponseEntity<InventoryState> getInventory(@AuthenticationPrincipal MyUser userPrincipal) {
+        InventoryState inventoryState = inventoryService.getInventoryStateBySupplierId(userPrincipal.getSupplierId());
+        return ResponseEntity.ok(inventoryState);
     }
 
     @Operation(

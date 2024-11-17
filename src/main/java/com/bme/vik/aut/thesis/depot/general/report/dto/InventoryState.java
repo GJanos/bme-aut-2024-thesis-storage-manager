@@ -22,6 +22,8 @@ public class InventoryState {
     private String supplierName;
     private int maxAvailableSpace;
     private int usedSpace;
+    // Mapping each ProductSchema to Map of ProductStatus to count
+    private Map<Long, Map<ProductStatus, Long>> productStats;
     // Mapping ProductSchemaID to List of ProductState
     private Map<Long, List<ProductState>> stock;
     private LocalDateTime createdAt;

@@ -11,7 +11,5 @@ import java.util.Optional;
 public interface SupplierRepository extends JpaRepository<Supplier, Long> {
     boolean existsByName(String name);
 
-//    @Query("SELECT s FROM Supplier s JOIN s.inventory i WHERE :productId MEMBER OF i.productIds")
-//    Supplier getByProductId(@Param("productId") Long productId);
     Optional<Supplier> findByName(String name);
 }

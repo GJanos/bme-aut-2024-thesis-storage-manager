@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserResponse {
-    private Integer id;
+    private Long id;
     private String userName;
     private Role role;
     private LocalDateTime createdAt;

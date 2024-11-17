@@ -12,7 +12,6 @@ import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryService;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.Product;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductRepository;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductService;
-import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductStatus;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.Supplier;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.SupplierRepository;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.SupplierService;
@@ -26,7 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @Service
@@ -59,6 +60,45 @@ public class OrderService {
     public Order createOrder(MyUser user, List<CreateOrderRequest> orderItems) {
         logger.info("Creating new order for user ID: {}", user.getId());
 
+        // Step 1: Calculate total stock requirements for each product
+        Map<Long, Integer> requiredStock = new HashMap<>(); // Map of product schema ID to required quantity
+        for (CreateOrderRequest productRequest : orderItems) {
+            Long productSchemaId;
+            int quantity;
+
+            if (productRequest instanceof COWProductName productNameRequest) {
+                productSchemaId = productSchemaService.getProductSchemaByName(productNameRequest.getProductName()).getId();
+                quantity = productNameRequest.getQuantity();
+
+            } else if (productRequest instanceof COWProductSupplierName productSupplierNameRequest) {
+                productSchemaId = productSchemaService.getProductSchemaByName(productSupplierNameRequest.getProductName()).getId();
+                quantity = productSupplierNameRequest.getQuantity();
+
+            } else if (productRequest instanceof COWProductId productIdRequest) {
+                Product product = productService.getProductById(productIdRequest.getProductId());
+                productSchemaId = product.getSchema().getId();
+                quantity = productIdRequest.getQuantity();
+
+            } else {
+                throw new InvalidCreateOrderRequestException("Unsupported CreateOrderRequest derived type");
+            }
+
+            requiredStock.merge(productSchemaId, quantity, Integer::sum);
+        }
+
+        // Step 2: Validate stock availability for each product schema
+        for (Map.Entry<Long, Integer> entry : requiredStock.entrySet()) {
+            Long productSchemaId = entry.getKey();
+            int requiredQuantity = entry.getValue();
+            int availableStock = inventoryService.getCurrentStockBySchemaId(productSchemaId);
+
+            if (availableStock < requiredQuantity) {
+                throw new TooLargeOrderException("Not enough stock available for product schema ID " + productSchemaId +
+                        ". Required: " + requiredQuantity + ", Available: " + availableStock);
+            }
+        }
+
+        // Step 3: Reserve products
         List<Product> items = new ArrayList<>();
         for (CreateOrderRequest productRequest : orderItems) {
             List<Product> products;
@@ -78,6 +118,8 @@ public class OrderService {
             assert products != null;
             items.addAll(products);
         }
+
+        // Step 4: Create the order with reserved products
         Order order = Order.builder()
                 .userId(user.getId())
                 .orderItems(items)
@@ -87,6 +129,7 @@ public class OrderService {
 
         return orderRepository.save(order);
     }
+
 
     @Transactional
     public void cancelOrder(Long orderId, MyUser user) {
@@ -139,19 +182,6 @@ public class OrderService {
         // Retrieve all inventories that have current stock > 0 for this schema
         List<Inventory> inventoriesWithStock = inventoryService.getInventoriesWithStockForSchema(schema.getId());
 
-        // Check if combined stock across all inventories meets the requested quantity
-        int totalAvailableStock = inventoriesWithStock.stream()
-                .mapToInt(inventory -> inventoryService.getCurrentStock(inventory.getId(), schema.getId()))
-                .sum();
-
-        if (totalAvailableStock < productRequest.getQuantity()) {
-            logger.warn("Requested quantity of {} exceeds total available stock of {} for product {}",
-                    productRequest.getQuantity(), totalAvailableStock, schema.getName());
-            throw new TooLargeOrderException("Requested quantity of " + productRequest.getQuantity() +
-                    " exceeds total available stock of " + totalAvailableStock + " for product " + schema.getName());
-        }
-        logger.info("Total available stock across inventories: {}", totalAvailableStock);
-
         // Sort inventories by soonest expiry date of the available products in each
         inventoriesWithStock.sort((inventory1, inventory2) -> {
             LocalDateTime earliestExpiryInInventory1 = inventoryService.getSoonestExpiryProduct(inventory1, schema).getExpiresAt();
@@ -183,6 +213,8 @@ public class OrderService {
     private List<Product> prepOrdProdByProdSupplName(COWProductSupplierName productRequest) {
         System.out.println("Processing order by product and supplier name: " + productRequest.getProductName() + ", Supplier: " + productRequest.getSupplierName());
 
+        inventoryService.validatePositiveQuantity(productRequest.getQuantity());
+
         Supplier supplier = supplierService.getSupplierByName(productRequest.getSupplierName());
 
         ProductSchema schema = productSchemaService.getProductSchemaByName(productRequest.getProductName());
@@ -195,12 +227,12 @@ public class OrderService {
 
         Product product = productService.getProductById(productRequest.getProductId());
 
-        if (product.getStatus() == ProductStatus.RESERVED) {
+        if (!productService.isProductAvailable(product)) {
             throw new ProductAlreadyReservedException("Product with ID " + product.getId() + " is already reserved");
         }
 
         Inventory inventory = inventoryService.getByProductId(product.getId());
-        inventoryService.reserveProduct(inventory, product);
+        inventoryService.reserveOneProduct(inventory, product);
         logger.info("Product with ID {} reserved successfully.", product.getId());
 
         return new ArrayList<>(List.of(product));

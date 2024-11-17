@@ -19,4 +19,8 @@ public class ProductService {
         return productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product with ID " + id + " not found"));
     }
+
+    public boolean isProductAvailable(Product product) {
+        return product.getStatus() == ProductStatus.FREE;
+    }
 }
