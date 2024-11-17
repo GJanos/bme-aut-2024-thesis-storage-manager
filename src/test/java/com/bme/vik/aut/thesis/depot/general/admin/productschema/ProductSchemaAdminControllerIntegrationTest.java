@@ -1,9 +1,8 @@
 package com.bme.vik.aut.thesis.depot.general.admin.productschema;
 
-import com.bme.vik.aut.thesis.depot.TestUtilities;
+import com.bme.vik.aut.thesis.depot.general.util.TestUtil;
 import com.bme.vik.aut.thesis.depot.general.admin.category.Category;
 import com.bme.vik.aut.thesis.depot.general.admin.category.CategoryRepository;
-import com.bme.vik.aut.thesis.depot.general.admin.category.dto.CreateCategoryRequest;
 import com.bme.vik.aut.thesis.depot.general.admin.productschema.dto.CreateProductSchemaRequest;
 import com.bme.vik.aut.thesis.depot.security.auth.AuthService;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.AuthRequest;
@@ -19,7 +18,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -157,16 +155,7 @@ class ProductSchemaAdminControllerIntegrationTest {
         Category category2 = categoryRepository.save(
                 Category.builder().name("Category2").description("Description2").build());
 
-        // Use the actual IDs assigned by the database
-        createPS("NewProduct", 20, List.of(category1.getId(), category2.getId()))
-                .expectStatus().isCreated()
-                .expectBody(ProductSchema.class)
-                .value(response -> {
-                    assertEquals("NewProduct", response.getName());
-                    assertEquals(20, response.getStorageSpaceNeeded());
-                    assertEquals(2, response.getCategories().size());
-                    assertEquals("Category1", response.getCategories().get(0).getName());
-                });
+        TestUtil.createProductSchemaWithAPI(webTestClient, adminToken, "ExistingProduct", 10, new ArrayList<>(List.of(category1, category2)));
     }
 
 

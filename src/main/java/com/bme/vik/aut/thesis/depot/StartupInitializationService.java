@@ -29,11 +29,11 @@ public class StartupInitializationService implements CommandLineRunner {
     private String adminPassword;
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         initializeAdminUser();
         inventoryService.initializeStockForAllInventories();
     }
-
+// TODO might write initializer code for everything
     private void initializeAdminUser() {
         userRepository.findByUserName(adminUsername).ifPresentOrElse(
                 user -> System.out.println("Admin user already exists."),
@@ -48,6 +48,4 @@ public class StartupInitializationService implements CommandLineRunner {
                 }
         );
     }
-
-// TODO configuration properties annot @ConfigurationProperties
 }

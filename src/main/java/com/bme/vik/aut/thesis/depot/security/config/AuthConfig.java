@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 public class AuthConfig {
 
     private static final Logger logger = Logger.getLogger(AuthConfig.class.getName());
+
     private final UserRepository userRepository;
     @Bean
     public UserDetailsService userDetailsService() {
@@ -55,11 +56,13 @@ public class AuthConfig {
 
     @Bean
     public JwtTokenService jwtTokenService() {
+        logger.info("Creating JWT token service");
         return new JwtTokenService();
     }
 
     @Bean
     public JwtAuthFilter jwtAuthFilter() {
+        logger.info("Creating JWT auth filter");
         return new JwtAuthFilter(jwtTokenService(), userDetailsService());
     }
 }

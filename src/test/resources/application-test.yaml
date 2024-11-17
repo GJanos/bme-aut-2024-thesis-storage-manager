@@ -17,6 +17,10 @@ custom:
   admin:
     username: testdepotadmin
     password: testdepotadmin
+  inventory:
+    should-check-expiration: false
+  alert:
+    expiry-check-interval-ms: 5000 # 5 seconds in milliseconds
 
 #application:
 #  security:

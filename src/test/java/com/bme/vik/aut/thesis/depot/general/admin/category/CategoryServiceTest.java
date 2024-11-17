@@ -1,24 +1,14 @@
 package com.bme.vik.aut.thesis.depot.general.admin.category;
 
-import com.bme.vik.aut.thesis.depot.TestUtilities;
 import com.bme.vik.aut.thesis.depot.exception.category.CategoryAlreadyExistsException;
 import com.bme.vik.aut.thesis.depot.exception.category.CategoryNotFoundException;
-import com.bme.vik.aut.thesis.depot.exception.user.UserNameAlreadyExistsException;
-import com.bme.vik.aut.thesis.depot.exception.user.UserNotFoundByIDException;
 import com.bme.vik.aut.thesis.depot.general.admin.category.dto.CreateCategoryRequest;
-import com.bme.vik.aut.thesis.depot.general.user.dto.UserModifyRequest;
-import com.bme.vik.aut.thesis.depot.general.user.dto.UserResponse;
-import com.bme.vik.aut.thesis.depot.security.user.MyUser;
-import com.bme.vik.aut.thesis.depot.security.user.Role;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;

@@ -64,7 +64,7 @@ public class UserController {
     @PreAuthorize("hasAnyAuthority('admin:read')")
     public ResponseEntity<UserResponse> getUserById(
             @Parameter(description = "ID of the user to be fetched", required = true)
-            @PathVariable Integer id) throws UserNotFoundByIDException {
+            @PathVariable Long id) throws UserNotFoundByIDException {
 
         UserResponse user = userService.getUserById(id);
         return ResponseEntity.ok(user);
@@ -95,7 +95,7 @@ public class UserController {
     @PreAuthorize("hasAnyAuthority('admin:update')")
     public ResponseEntity<UserResponse> updateUser(
             @Parameter(description = "ID of the user to be updated", required = true)
-            @PathVariable Integer id,
+            @PathVariable Long id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Details for updating the user",
                     required = true,
@@ -126,7 +126,7 @@ public class UserController {
     @PreAuthorize("hasAnyAuthority('admin:delete')")
     public ResponseEntity<Void> deleteUser(
             @Parameter(description = "ID of the user to be deleted", required = true)
-            @PathVariable Integer id) throws UserNotFoundByIDException {
+            @PathVariable Long id) throws UserNotFoundByIDException {
 
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();

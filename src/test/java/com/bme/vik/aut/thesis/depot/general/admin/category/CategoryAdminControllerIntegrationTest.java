@@ -1,13 +1,10 @@
 package com.bme.vik.aut.thesis.depot.general.admin.category;
 
-import com.bme.vik.aut.thesis.depot.TestUtilities;
+import com.bme.vik.aut.thesis.depot.general.util.TestUtil;
 import com.bme.vik.aut.thesis.depot.general.admin.category.dto.CreateCategoryRequest;
-import com.bme.vik.aut.thesis.depot.general.user.dto.UserResponse;
 import com.bme.vik.aut.thesis.depot.security.auth.AuthService;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.AuthRequest;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.RegisterRequest;
-import com.bme.vik.aut.thesis.depot.security.user.MyUser;
-import com.bme.vik.aut.thesis.depot.security.user.Role;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +17,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
@@ -106,7 +102,7 @@ class CategoryAdminControllerIntegrationTest {
                 .value(response -> {
                     assertEquals("Category", response.getName());
                     assertEquals("Description", response.getDescription());
-                    TestUtilities.assertCreatedAndUpdatedTimes(response.getCreatedAt(), response.getUpdatedAt());
+                    TestUtil.assertCreatedAndUpdatedTimes(response.getCreatedAt(), response.getUpdatedAt());
                 });
     }
 
@@ -125,14 +121,7 @@ class CategoryAdminControllerIntegrationTest {
 
     @Test
     void shouldCreateCategory() {
-        createCategory("NewCategory", "Description")
-                .expectStatus().isCreated()
-                .expectBody(Category.class)
-                .value(response -> {
-                    assertEquals("NewCategory", response.getName());
-                    assertEquals("Description", response.getDescription());
-                    TestUtilities.assertCreatedAndUpdatedTimes(response.getCreatedAt(), response.getUpdatedAt());
-                });
+       TestUtil.createCategoryWithAPI(webTestClient, adminToken ,"NewCategory", "Description");
     }
 
     @Test
@@ -162,7 +151,7 @@ class CategoryAdminControllerIntegrationTest {
                     assertEquals("UpdatedDescription", response.getDescription());
 
                     assertTrue(response.getUpdatedAt().isAfter(updatedAt));
-                    TestUtilities.assertCreatedAndUpdatedTimes(response.getCreatedAt(), response.getUpdatedAt());
+                    TestUtil.assertCreatedAndUpdatedTimes(response.getCreatedAt(), response.getUpdatedAt());
                 });
     }
 

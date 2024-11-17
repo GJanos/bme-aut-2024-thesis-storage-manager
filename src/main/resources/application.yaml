@@ -40,6 +40,11 @@ custom:
   inventory:
     max-depot-space: 10000
     max-inventory-space: 1000
+    should-check-expiration: true
+  alert:
     auto-reorder: true
-    low-stock-alert: true
-    expiration-alert: true
+    low-stock: true
+    expiration: true
+    expiry-check-interval-ms: 3600000 # 1 hour in milliseconds
+  supplier:
+    generate-random-password: false

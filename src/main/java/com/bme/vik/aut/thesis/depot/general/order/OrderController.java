@@ -194,7 +194,7 @@ public class OrderController {
                     )
             }
     )
-    @PostMapping("/pending/{id}/approve")
+    @PutMapping("/pending/{id}/approve")
     @PreAuthorize("hasAuthority('admin:update')")
     public ResponseEntity<Order> approvePendingOrder(@PathVariable Long id) {
         Order approvedOrder = orderService.approvePendingOrder(id);

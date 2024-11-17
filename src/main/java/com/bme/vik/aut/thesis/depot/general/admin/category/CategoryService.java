@@ -14,8 +14,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategoryService {
 
-    private final CategoryRepository categoryRepository;
     private static final Logger logger = LoggerFactory.getLogger(CategoryService.class);
+
+    private final CategoryRepository categoryRepository;
 
     public List<Category> getAllCategories() {
         logger.info("Fetching all categories");

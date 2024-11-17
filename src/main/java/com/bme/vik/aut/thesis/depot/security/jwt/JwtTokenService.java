@@ -65,10 +65,10 @@ public class JwtTokenService {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList()));
 
-        long expiration = 100 * 24 * 60 * 60 * 1000L; // 100 days
-        String token = buildToken(claims, userDetails.getUsername(), expiration);
-        return token;
-        //return buildToken(claims, userDetails.getUsername(), jwtExpiration);
+//        long expiration = 100 * 24 * 60 * 60 * 1000L; // 100 days
+//        String token = buildToken(claims, userDetails.getUsername(), expiration);
+//        return token;
+        return buildToken(claims, userDetails.getUsername(), jwtExpiration);
     }
 
     private String buildToken(Map<String, Object> claims, String subject, long expiration) {

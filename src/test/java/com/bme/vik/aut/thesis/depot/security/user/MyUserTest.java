@@ -23,7 +23,7 @@ class MyUserTest {
 
     @Test
     void shouldSetAndGetId() {
-        Integer id = 1;
+        Long id = 1L;
         user.setId(id);
         assertEquals(id, user.getId());
     }

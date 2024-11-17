@@ -43,6 +43,14 @@ public class ProductSchema {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    @PrePersist
+    @PreUpdate
+    private void validateStorageSpaceNeeded() {
+        if (this.storageSpaceNeeded <= 0) {
+            throw new NonGreaterThanZeroStorageSpaceException("Storage space needed (storageSpaceNeeded) must be greater than zero");
+        }
+    }
+
     // Custom setter for storageSpaceNeeded to prevent negative values
     public void setStorageSpaceNeeded(int storageSpaceNeeded) {
         if (storageSpaceNeeded <= 0) {
