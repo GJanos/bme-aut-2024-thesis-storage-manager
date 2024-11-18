@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/report/inventory")
+@RequestMapping("/report")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Report Management", description = "Operations related to generating inventory and order reports")
@@ -40,7 +40,7 @@ public class ReportController {
                     )
             }
     )
-    @GetMapping("/state")
+    @GetMapping("/inventory/state")
     @PreAuthorize("hasAuthority('admin:read')")
     public ResponseEntity<InventoryStateReportResponse> getInventoryStateReport() {
         InventoryStateReportResponse report = reportService.getInventoryStateReportResponse();
@@ -63,7 +63,7 @@ public class ReportController {
                     )
             }
     )
-    @GetMapping("/expiry")
+    @GetMapping("/inventory/expiry")
     @PreAuthorize("hasAuthority('admin:read')")
     public ResponseEntity<InventoryExpiryReportResponse> getInventoryExpiryReport() {
         InventoryExpiryReportResponse report = reportService.getInventoryExpiryReportResponse();

@@ -1,6 +1,7 @@
 package com.bme.vik.aut.thesis.depot.general.report;
 
 import com.bme.vik.aut.thesis.depot.exception.product.ProductNotFoundException;
+
 import java.util.Optional;
 
 import com.bme.vik.aut.thesis.depot.general.order.Order;
@@ -84,8 +85,7 @@ public class ReportService {
     }
 
     private ProductState mapToProductState(Long productId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException("Product with ID " + productId + " not found"));
+        Product product = productRepository.findById(productId).orElseThrow();
 
         return ProductState.builder()
                 .productID(product.getId())
@@ -183,7 +183,7 @@ public class ReportService {
 
     private UserOrder mapToUserOrder(Order order) {
         List<ProductState> products = order.getOrderItems().stream()
-                .map(this::mapToProductState) // Pass each Product directly to mapToProductState
+                .map(this::mapToProductState)
                 .collect(Collectors.toList());
 
         return UserOrder.builder()
