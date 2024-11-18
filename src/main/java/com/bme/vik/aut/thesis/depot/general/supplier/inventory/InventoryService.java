@@ -24,6 +24,7 @@ import com.bme.vik.aut.thesis.depot.general.supplier.supplier.SupplierRepository
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.dto.CreateSupplierRequest;
 import com.bme.vik.aut.thesis.depot.security.user.MyUser;
 import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +61,7 @@ public class InventoryService {
     private final ReportService reportService;
 
     // { K: InventoryID, V: { K: ProductSchemaID, V: List<Product> } }
+    @Getter
     private final Map<Long, Map<Long, List<Product>>> stock = new HashMap<>();
 
     @PostConstruct

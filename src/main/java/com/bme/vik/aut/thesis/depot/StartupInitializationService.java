@@ -33,7 +33,7 @@ public class StartupInitializationService implements CommandLineRunner {
         initializeAdminUser();
         inventoryService.initializeStockForAllInventories();
     }
-// TODO might write initializer code for everything
+
     private void initializeAdminUser() {
         userRepository.findByUserName(adminUsername).ifPresentOrElse(
                 user -> System.out.println("Admin user already exists."),
