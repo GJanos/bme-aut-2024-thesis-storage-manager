@@ -64,6 +64,10 @@ public class InventoryService {
     @Getter
     private final Map<Long, Map<Long, List<Product>>> stock = new HashMap<>();
 
+    // :::::::::::::::::::::::::::::::::::::::::::::: //
+    // @@@@@@@@@@@@@@@ PUBLIC METHODS @@@@@@@@@@@@@@@ //
+    // :::::::::::::::::::::::::::::::::::::::::::::: //
+
     @PostConstruct
     public void init() {
         alertService.setInventoryService(this);
@@ -179,11 +183,10 @@ public class InventoryService {
             validateExpiryDate(request.getExpiresAt(), inventory);
         }
 
+        int quantity = validatePositiveQuantity(request.getQuantity());
+
         ProductSchema productSchema = productSchemaService.getProductSchemaById(request.getProductSchemaId());
         Long productSchemaId = productSchema.getId();
-
-        // validation complete
-        int quantity = validatePositiveQuantity(request.getQuantity());
         String productName = productSchema.getName();
 
         logger.info("User '{}' with supplier ID: {} is adding: {} stock of: {}", user.getUsername(), supplierId, quantity, productName);
@@ -228,12 +231,11 @@ public class InventoryService {
         Inventory inventory = getInventoryBySupplierId(supplierId);
         Long inventoryId = inventory.getId();
 
+        int quantity = validatePositiveQuantity(request.getQuantity());
+
         ProductSchema productSchema = productSchemaService.getProductSchemaById(request.getProductSchemaId());
         Long productSchemaId = productSchema.getId();
         validateProductSchema(inventoryId, productSchemaId);
-
-        // validation complete
-        int quantity = validatePositiveQuantity(request.getQuantity());
         String productName = productSchema.getName();
 
         logger.info("User '{}' with supplier ID: {} is removing: {} stock of: {}", username, supplierId, quantity, productName);
@@ -378,6 +380,48 @@ public class InventoryService {
                 .sum();
     }
 
+    public boolean needsReorderForStock(Inventory inventory, Long productSchemaId) {
+        return getCurrentStock(inventory.getId(), productSchemaId) <= inventory.getReorderThreshold();
+    }
+
+    public boolean lowOnStock(Inventory inventory, Long productSchemaId) {
+        return getCurrentStock(inventory.getId(), productSchemaId) <= inventory.getLowStockAlertThreshold();
+    }
+
+    public int validatePositiveQuantity(int quantity) {
+        if (quantity <= 0) {
+            logger.error("Invalid stock quantity: {}. Quantity must be greater than zero.", quantity);
+            throw new NonGreaterThanZeroQuantityException("Requested quantity: " + quantity + ", it must be greater than zero.");
+        }
+        return quantity;
+    }
+
+    public int getCurrentStock(Long inventoryId, Long productSchemaId) {
+        if (!stock.containsKey(inventoryId) || !stock.get(inventoryId).containsKey(productSchemaId)) {
+            return 0;
+        }
+
+        // Filter out reserved products and count only non-reserved products
+        return (int) stock.get(inventoryId).get(productSchemaId).stream()
+                .filter(product -> product.getStatus() == ProductStatus.FREE)
+                .count();
+    }
+
+    public Product getSoonestExpiryProduct(Inventory inventory, ProductSchema schema) {
+        // Fetch all products of the specified schema in the inventory
+        List<Product> products = stock.get(inventory.getId()).get(schema.getId());
+
+        // Find the free product with the closest expiry date
+        return products.stream()
+                .filter(product -> product.getStatus() == ProductStatus.FREE)
+                .min(Comparator.comparing(Product::getExpiresAt))
+                .orElseThrow(() -> new ProductNotFoundException("No available products with schema ID " + schema.getId() + " in inventory ID " + inventory.getId()));
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::: //
+    // @@@@@@@@@@@@@@@ PRIVATE METHODS @@@@@@@@@@@@@@@ //
+    // ::::::::::::::::::::::::::::::::::::::::::::::: //
+
     private List<Product> reserveProducts(Long inventoryId, Long schemaId, int quantity) {
         List<Product> products = stock.get(inventoryId).get(schemaId);
 
@@ -397,14 +441,6 @@ public class InventoryService {
             logger.error("User '{}' does not have a supplier", user.getUsername());
             throw new UserSupplierNotFoundException("User '" + user.getUsername() + "' does not have a supplier");
         }
-    }
-
-    public int validatePositiveQuantity(int quantity) {
-        if (quantity <= 0) {
-            logger.error("Invalid stock quantity: {}. Quantity must be greater than zero.", quantity);
-            throw new NonGreaterThanZeroQuantityException("Requested quantity: " + quantity + ", it must be greater than zero.");
-        }
-        return quantity;
     }
 
     private void validateExpiryDate(LocalDateTime expiresAt, Inventory inventory) {
@@ -450,17 +486,6 @@ public class InventoryService {
         stock.get(inventoryId).get(productSchemaId).addAll(productsToAdd);
     }
 
-    public int getCurrentStock(Long inventoryId, Long productSchemaId) {
-        if (!stock.containsKey(inventoryId) || !stock.get(inventoryId).containsKey(productSchemaId)) {
-            return 0;
-        }
-
-        // Filter out reserved products and count only non-reserved products
-        return (int) stock.get(inventoryId).get(productSchemaId).stream()
-                .filter(product -> product.getStatus() == ProductStatus.FREE)
-                .count();
-    }
-
     private boolean hasAvailableStock(Long inventoryId, Long productSchemaId, int quantity) {
         return getCurrentStock(inventoryId, productSchemaId) >= quantity;
     }
@@ -468,19 +493,9 @@ public class InventoryService {
     private List<Product> selectCTEFreeProducts(List<Product> products, int quantity) {
         return products.stream()
                 .filter(product -> product.getStatus() == ProductStatus.FREE)
+                .sorted(Comparator.comparing(Product::getExpiresAt))
                 .limit(quantity)
                 .collect(Collectors.toList());
-    }
-
-    public Product getSoonestExpiryProduct(Inventory inventory, ProductSchema schema) {
-        // Fetch all products of the specified schema in the inventory
-        List<Product> products = stock.get(inventory.getId()).get(schema.getId());
-
-        // Find the free product with the closest expiry date
-        return products.stream()
-                .filter(product -> product.getStatus() == ProductStatus.FREE)
-                .min(Comparator.comparing(Product::getExpiresAt))
-                .orElseThrow(() -> new ProductNotFoundException("No available products with schema ID " + schema.getId() + " in inventory ID " + inventory.getId()));
     }
 
     private List<Product> createProductsToRemoveForNearExpiryStock(Long inventoryId, Long productSchemaId, int quantity) {
@@ -495,13 +510,5 @@ public class InventoryService {
             inventoryStock.remove(productSchemaId);
         }
         return productsToRemove;
-    }
-
-    public boolean needsReorderForStock(Inventory inventory, Long productSchemaId) {
-        return getCurrentStock(inventory.getId(), productSchemaId) <= inventory.getReorderThreshold();
-    }
-
-    public boolean lowOnStock(Inventory inventory, Long productSchemaId) {
-        return getCurrentStock(inventory.getId(), productSchemaId) <= inventory.getLowStockAlertThreshold();
     }
 }
