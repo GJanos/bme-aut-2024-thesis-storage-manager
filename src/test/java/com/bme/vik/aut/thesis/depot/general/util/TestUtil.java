@@ -15,6 +15,7 @@ import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductRepository;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductStatus;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.dto.CreateProductStockRequest;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.dto.ProductStockResponse;
+import com.bme.vik.aut.thesis.depot.general.supplier.product.dto.RemoveProductStockRequest;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.Supplier;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.dto.CreateSupplierRequest;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.dto.SupplierCreationResponse;
@@ -44,6 +45,7 @@ public class TestUtil {
     private static final String CREATE_PRODUCT_SCHEMA_PATH = "/admin/product-schema";
     private static final String CREATE_SUPPLIER_PATH = "/admin/supplier";
     private static final String ADD_STOCK_PATH = "/supplier/add-stock";
+    private static final String REMOVE_STOCK_PATH = "/supplier/remove-stock";
     private static final String CREATE_ORDER_PATH = "/order";
     private static final String ACCEPT_PENDING_ORDER_START = "/order/pending/";
     private static final String ACCEPT_PENDING_ORDER_END_PATH = "/approve";
@@ -98,9 +100,6 @@ public class TestUtil {
 
         userRepository.save(user);
 
-        /* Admin token is needed for accessing admin permission routes,
-        so we need to authenticate the admin user and store the token.
-         */
         AuthRequest authRequest = AuthRequest.builder()
                 .userName(username)
                 .password(password)
@@ -309,6 +308,32 @@ public class TestUtil {
                     assertEquals(productSchema.getId(), productStockResponse.getProductSchemaId());
                     assertEquals(stockQuantity, productStockResponse.getQuantity());
                     assertEquals("Stock added successfully", productStockResponse.getResponse());
+                });
+    }
+
+    public static void removeStockFromSupplierInventory(
+            WebTestClient webTestClient,
+            String supplierToken,
+            ProductSchema productSchema,
+            int stockQuantity
+    ) {
+        RemoveProductStockRequest removeStockRequest = RemoveProductStockRequest.builder()
+                .productSchemaId(productSchema.getId())
+                .quantity(stockQuantity)
+                .build();
+
+        webTestClient
+                .post()
+                .uri(REMOVE_STOCK_PATH )
+                .header(AUTHORIZATION_HEADER, BEARER_PREFIX + supplierToken)
+                .bodyValue(removeStockRequest)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ProductStockResponse.class)
+                .value(productStockResponse -> {
+                    assertEquals(productSchema.getId(), productStockResponse.getProductSchemaId());
+                    assertEquals(stockQuantity, productStockResponse.getQuantity());
+                    assertEquals("Stock removed successfully", productStockResponse.getResponse());
                 });
     }
 

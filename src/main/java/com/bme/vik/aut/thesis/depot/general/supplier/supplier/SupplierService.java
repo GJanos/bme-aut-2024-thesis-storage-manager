@@ -152,7 +152,7 @@ public class SupplierService {
         }
     }
 
-    private String generateRandomSupplierUserPassword() {
+    protected String generateRandomSupplierUserPassword() {
         String upperCaseLetters = RandomStringUtils.random(2, 65, 90, true, true);
         String lowerCaseLetters = RandomStringUtils.random(2, 97, 122, true, true);
         String numbers = RandomStringUtils.randomNumeric(2);
