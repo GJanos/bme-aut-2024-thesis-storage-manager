@@ -1,5 +1,6 @@
 package com.bme.vik.aut.thesis.depot.general.info;
 
+import com.bme.vik.aut.thesis.depot.exception.category.CategoryNotFoundException;
 import com.bme.vik.aut.thesis.depot.general.admin.category.Category;
 import com.bme.vik.aut.thesis.depot.general.info.dto.OrderItemResponse;
 import com.bme.vik.aut.thesis.depot.general.info.dto.OrderResponse;
@@ -60,6 +61,31 @@ public class InfoService {
                 .expiresAt(product.getExpiresAt())
                 .build()).collect(Collectors.toList());
     }
+
+    public List<ProductResponse> getProductsByCategoryId(Long categoryId) {
+        logger.info("Fetching products for category ID: {}", categoryId);
+
+        List<Product> products = productRepository.findAll().stream()
+                .filter(product -> product.getSchema().getCategories().stream()
+                        .anyMatch(category -> category.getId().equals(categoryId)))
+                .collect(Collectors.toList());
+
+        if (products.isEmpty()) {
+            throw new CategoryNotFoundException("No products found for category ID: " + categoryId);
+        }
+
+        logger.info("Products fetched successfully for category ID: {}", categoryId);
+        return products.stream().map(product -> ProductResponse.builder()
+                .id(product.getId())
+                .productName(product.getSchema().getName())
+                .description(product.getDescription())
+                .categories(product.getSchema().getCategories().stream()
+                        .map(Category::getName).collect(Collectors.toList()))
+                .status(product.getStatus().name())
+                .expiresAt(product.getExpiresAt())
+                .build()).collect(Collectors.toList());
+    }
+
 
     public List<SupplierResponse> getAllSuppliers() {
         logger.info("Fetching all suppliers information");

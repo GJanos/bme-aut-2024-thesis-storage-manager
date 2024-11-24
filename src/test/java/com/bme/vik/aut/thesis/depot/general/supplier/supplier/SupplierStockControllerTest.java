@@ -83,6 +83,10 @@ class SupplierStockControllerIntegrationTest {
 
     @Autowired
     private AuthService authService;
+    @Autowired
+    private SupplierRepository supplierRepository;
+    @Autowired
+    private InventoryService inventoryService;
 
     @BeforeEach
     void setUp() {
@@ -114,6 +118,8 @@ class SupplierStockControllerIntegrationTest {
         inventoryRepository.deleteAll();
         categoryRepository.deleteAll();
         userRepository.deleteAll();
+        inventoryService.clearStock();
+        supplierRepository.deleteAll();
     }
 
     @Test

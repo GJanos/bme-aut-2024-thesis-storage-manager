@@ -1,5 +1,6 @@
 package com.bme.vik.aut.thesis.depot.security.user;
 
+import com.bme.vik.aut.thesis.depot.general.util.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
@@ -92,11 +93,7 @@ class MyUserTest {
         assertNotNull(user.getCreatedAt());
         assertNotNull(user.getUpdatedAt());
 
-        // Truncate both timestamps to milliseconds for comparison
-        LocalDateTime createdAtTruncated = user.getCreatedAt().truncatedTo(ChronoUnit.MILLIS);
-        LocalDateTime updatedAtTruncated = user.getUpdatedAt().truncatedTo(ChronoUnit.MILLIS);
-
-        assertEquals(createdAtTruncated, updatedAtTruncated);
+        TestUtil.assertCreatedAndUpdatedTimes(user.getCreatedAt(), user.getUpdatedAt());
     }
 
     @Test

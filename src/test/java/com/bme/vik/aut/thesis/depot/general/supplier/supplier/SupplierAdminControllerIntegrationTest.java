@@ -76,6 +76,8 @@ class SupplierAdminControllerIntegrationTest {
     private SupplierService supplierService;
     @Autowired
     private AuthService authService;
+    @Autowired
+    private InventoryService inventoryService;
 
     @BeforeEach
     void setUp() {
@@ -94,6 +96,7 @@ class SupplierAdminControllerIntegrationTest {
     @AfterEach
     void tearDown() {
         userRepository.deleteAll();
+        inventoryService.clearStock();
     }
 
     @Test

@@ -65,11 +65,14 @@ public class StartupInitializationServiceIntegrationTest {
 
     @Value("${custom.admin.password}")
     private String adminPassword;
+    @Autowired
+    private InventoryService inventoryService;
 
     @BeforeEach
     void setUp() {
         // Clear existing admin user if present
         userRepository.deleteAll();
+        inventoryService.clearStock();
     }
 
     @Test

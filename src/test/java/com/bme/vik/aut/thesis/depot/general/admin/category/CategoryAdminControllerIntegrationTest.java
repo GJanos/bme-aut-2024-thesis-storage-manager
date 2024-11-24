@@ -1,10 +1,12 @@
 package com.bme.vik.aut.thesis.depot.general.admin.category;
 
+import com.bme.vik.aut.thesis.depot.general.user.UserRepository;
 import com.bme.vik.aut.thesis.depot.general.util.TestUtil;
 import com.bme.vik.aut.thesis.depot.general.admin.category.dto.CreateCategoryRequest;
 import com.bme.vik.aut.thesis.depot.security.auth.AuthService;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.AuthRequest;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.RegisterRequest;
+import com.bme.vik.aut.thesis.depot.security.user.Role;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -49,16 +52,26 @@ class CategoryAdminControllerIntegrationTest {
 
     @Value("${custom.admin.password}")
     private String adminPassword;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void setUp() {
-        adminToken = authService.authenticate(
-                AuthRequest.builder().userName(adminUsername).password(adminPassword).build()).getToken();
+        adminToken = TestUtil.createAndRegisterUser(
+                userRepository,
+                adminUsername,
+                adminPassword,
+                Role.ADMIN,
+                authService,
+                passwordEncoder);
     }
 
     @AfterEach
     void tearDown() {
         categoryRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test

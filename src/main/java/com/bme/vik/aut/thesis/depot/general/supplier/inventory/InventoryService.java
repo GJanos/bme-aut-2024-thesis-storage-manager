@@ -74,6 +74,7 @@ public class InventoryService {
     }
 
     public void clearStock() {
+        AVAILABLE_DEPOT_SPACE_FOR_NEW_INVENTORY += stock.size() * MAX_AVAILABLE_INVENTORY_SPACE;
         stock.clear();
     }
 
@@ -105,7 +106,7 @@ public class InventoryService {
     public Inventory createInventory(CreateSupplierRequest request) {
         logger.info("Creating new inventory for supplier with initial max space: {}", MAX_AVAILABLE_INVENTORY_SPACE);
 
-        if (AVAILABLE_DEPOT_SPACE_FOR_NEW_INVENTORY - MAX_AVAILABLE_INVENTORY_SPACE <= 0) {
+        if (AVAILABLE_DEPOT_SPACE_FOR_NEW_INVENTORY - MAX_AVAILABLE_INVENTORY_SPACE < 0) {
             String errorMsg = "Not enough space in depot for new inventory. Available space: " + AVAILABLE_DEPOT_SPACE_FOR_NEW_INVENTORY + ", requested space: " + MAX_AVAILABLE_INVENTORY_SPACE;
             logger.error(errorMsg);
             throw new DepotFullException(errorMsg);
