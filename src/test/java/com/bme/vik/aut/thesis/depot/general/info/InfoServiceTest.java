@@ -1,5 +1,6 @@
 package com.bme.vik.aut.thesis.depot.general.info;
 
+import com.bme.vik.aut.thesis.depot.exception.category.CategoryNotFoundException;
 import com.bme.vik.aut.thesis.depot.general.admin.category.Category;
 import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchema;
 import com.bme.vik.aut.thesis.depot.general.info.dto.OrderItemResponse;
@@ -53,12 +54,9 @@ class InfoServiceTest {
     @InjectMocks
     private InfoService infoService;
 
-    private ModelMapper modelMapper;
-
     @BeforeEach
     void setUp() {
-        // Use the actual ModelMapper
-        modelMapper = new ModelMapper();
+        ModelMapper modelMapper = new ModelMapper();
         infoService = new InfoService(userRepository, modelMapper, productRepository, supplierRepository, orderRepository);
     }
 
@@ -194,6 +192,112 @@ class InfoServiceTest {
         assertEquals(productStatus.name(), actualProduct.getStatus());
         assertEquals(expiresAt, actualProduct.getExpiresAt());
 
+        verify(productRepository).findAll();
+    }
+
+    @Test
+    void shouldFetchAllProductsForCategory() {
+        //***** <-- given: Categories, product schemas, and products --> *****//
+        Long categoryId1 = 1L;
+        Long categoryId2 = 2L;
+        String categoryName1 = "Electronics";
+        String categoryName2 = "Furniture";
+
+        Category category1 = Category.builder()
+                .id(categoryId1)
+                .name(categoryName1)
+                .description("Electronic items")
+                .build();
+
+        Category category2 = Category.builder()
+                .id(categoryId2)
+                .name(categoryName2)
+                .description("Furniture items")
+                .build();
+
+        ProductSchema schema1 = ProductSchema.builder()
+                .id(1L)
+                .name("Laptop")
+                .categories(List.of(category1))
+                .build();
+
+        ProductSchema schema2 = ProductSchema.builder()
+                .id(2L)
+                .name("Chair")
+                .categories(List.of(category2))
+                .build();
+
+        Product product1 = Product.builder()
+                .id(1L)
+                .schema(schema1)
+                .description("High-end gaming laptop")
+                .status(ProductStatus.FREE)
+                .expiresAt(LocalDateTime.now().plusDays(30))
+                .build();
+
+        Product product2 = Product.builder()
+                .id(2L)
+                .schema(schema2)
+                .description("Ergonomic office chair")
+                .status(ProductStatus.FREE)
+                .expiresAt(LocalDateTime.now().plusDays(20))
+                .build();
+
+        List<Product> mockProducts = List.of(product1, product2);
+        when(productRepository.findAll()).thenReturn(mockProducts);
+
+        //***** <-- when: Fetch products for a specific category --> *****//
+        List<ProductResponse> actualResponses = infoService.getProductsByCategoryId(categoryId1);
+
+        //***** <-- then: Validate responses --> *****//
+        assertNotNull(actualResponses);
+        assertEquals(1, actualResponses.size());
+
+        ProductResponse actualProduct = actualResponses.get(0);
+        assertEquals("Laptop", actualProduct.getProductName());
+        assertEquals("High-end gaming laptop", actualProduct.getDescription());
+        assertEquals(ProductStatus.FREE.name(), actualProduct.getStatus());
+        assertEquals(1, actualProduct.getCategories().size());
+        assertEquals(categoryName1, actualProduct.getCategories().get(0));
+
+        verify(productRepository).findAll();
+    }
+
+    @Test
+    void shouldNotFetchProductsForNonExistingCategory() {
+        //***** <-- given: Categories, product schemas, and products --> *****//
+        Long nonExistentCategoryId = 999L;
+
+        Category category = Category.builder()
+                .id(1L)
+                .name("Electronics")
+                .description("Electronic items")
+                .build();
+
+        ProductSchema schema = ProductSchema.builder()
+                .id(1L)
+                .name("Laptop")
+                .categories(List.of(category))
+                .build();
+
+        Product product = Product.builder()
+                .id(1L)
+                .schema(schema)
+                .description("High-end gaming laptop")
+                .status(ProductStatus.FREE)
+                .expiresAt(LocalDateTime.now().plusDays(30))
+                .build();
+
+        List<Product> mockProducts = List.of(product);
+        when(productRepository.findAll()).thenReturn(mockProducts);
+
+        //***** <-- when & then: Attempt to fetch products for a non-existent category, expect exception --> *****//
+        CategoryNotFoundException exception = assertThrows(
+                CategoryNotFoundException.class,
+                () -> infoService.getProductsByCategoryId(nonExistentCategoryId)
+        );
+
+        assertEquals("No products found for category ID: " + nonExistentCategoryId, exception.getMessage());
         verify(productRepository).findAll();
     }
 

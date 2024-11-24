@@ -1,5 +1,6 @@
 package com.bme.vik.aut.thesis.depot.general.info;
 
+import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryService;
 import com.bme.vik.aut.thesis.depot.general.util.TestUtil;
 import com.bme.vik.aut.thesis.depot.general.admin.category.CategoryRepository;
 import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchemaRepository;
@@ -51,6 +52,7 @@ public class InfoControllerIntegrationTest {
 
     private static final String INFO_USER_ME_PATH = "/info/user/me";
     private static final String INFO_USER_PRODUCT_PATH = "/info/product";
+    private static final String INFO_USER_PRODUCTS_OF_CATEGORY_PATH = "/info/product/category/";
     private static final String INFO_USER_SUPPLIER_PATH = "/info/supplier";
     private static final String INFO_USER_OWN_ORDER_PATH = "/info/order";
 
@@ -81,6 +83,8 @@ public class InfoControllerIntegrationTest {
     private String token;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private InventoryService inventoryService;
 
     @BeforeEach
     void setUp() {
@@ -97,6 +101,7 @@ public class InfoControllerIntegrationTest {
         categoryRepository.deleteAll();
         supplierRepository.deleteAll();
         userRepository.deleteAll();
+        inventoryService.clearStock();
     }
 
     @Test
@@ -161,6 +166,61 @@ public class InfoControllerIntegrationTest {
         assertEquals(ProductStatus.FREE.name(), actualStatus);
         assertEquals(1, actualCategories.size());
         assertEquals("Category 1", actualCategories.get(0));
+    }
+
+    @Test
+    void shouldReturnProductsForCategory() {
+        //***** <-- given: Create category, product schema, and products --> *****//
+        TestUtil.CategoryUnit categoryUnit = new TestUtil.CategoryUnit("Electronics", "Electronics category");
+        TestUtil.CreateProductResponse createProductResponse1 = TestUtil.createProduct(
+                categoryRepository,
+                productSchemaRepository,
+                productRepository,
+                List.of(categoryUnit),
+                "Smartphone",
+                5,
+                "High-end smartphone",
+                1L,
+                ProductStatus.FREE,
+                LocalDateTime.now().plusDays(10)
+        );
+
+        TestUtil.CategoryUnit categoryUnit2 = new TestUtil.CategoryUnit("Store", "Store category");
+        TestUtil.CreateProductResponse createProductResponse2 = TestUtil.createProduct(
+                categoryRepository,
+                productSchemaRepository,
+                productRepository,
+                List.of(categoryUnit2),
+                "Laptop",
+                10,
+                "Gaming laptop",
+                1L,
+                ProductStatus.FREE,
+                LocalDateTime.now().plusDays(15)
+        );
+
+        Long categoryId = createProductResponse1.categories().get(0).getId();
+
+        //***** <-- when: Make authenticated request to fetch products for the category --> *****//
+        List<ProductResponse> productResponses = webTestClient
+                .get()
+                .uri(INFO_USER_PRODUCTS_OF_CATEGORY_PATH + categoryId)
+                .header(AUTHORIZATION_HEADER, BEARER_PREFIX + token)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(ProductResponse.class)
+                .returnResult()
+                .getResponseBody();
+
+        //***** <-- then: Validate response properties --> *****//
+        assertNotNull(productResponses);
+        assertEquals(1, productResponses.size());
+
+        ProductResponse productResponse1 = productResponses.get(0);
+
+        assertEquals("Smartphone", productResponse1.getProductName());
+        assertEquals("High-end smartphone", productResponse1.getDescription());
+        assertTrue(productResponse1.getCategories().contains("Electronics"));
     }
 
     @Test

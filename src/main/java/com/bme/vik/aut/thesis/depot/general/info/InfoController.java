@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -87,6 +88,31 @@ public class InfoController {
         List<ProductResponse> products = infoService.getAllProducts();
         return ResponseEntity.ok(products);
     }
+
+    @Operation(
+            summary = "Get products by category ID",
+            description = "Fetches all products that belong to the specified category.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Products fetched successfully",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Category not found",
+                            content = @Content
+                    )
+            }
+    )
+    @GetMapping("/product/category/{id}")
+    @PreAuthorize("hasAuthority('user:read')")
+    public ResponseEntity<List<ProductResponse>> getProductsByCategoryId(
+            @Parameter(description = "ID of the category", required = true) @PathVariable Long id) {
+        List<ProductResponse> products = infoService.getProductsByCategoryId(id);
+        return ResponseEntity.ok(products);
+    }
+
 
     @Operation(
             summary = "Get supplier information",

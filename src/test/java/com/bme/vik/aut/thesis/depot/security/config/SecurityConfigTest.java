@@ -1,12 +1,17 @@
 package com.bme.vik.aut.thesis.depot.security.config;
 
 import com.bme.vik.aut.thesis.depot.general.user.UserRepository;
+import com.bme.vik.aut.thesis.depot.general.util.TestUtil;
 import com.bme.vik.aut.thesis.depot.security.auth.AuthController;
+import com.bme.vik.aut.thesis.depot.security.auth.AuthService;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.AuthRequest;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.RegisterRequest;
 import com.bme.vik.aut.thesis.depot.security.jwt.JwtAuthFilter;
 import com.bme.vik.aut.thesis.depot.security.jwt.JwtTokenService;
+import com.bme.vik.aut.thesis.depot.security.user.Role;
 import lombok.SneakyThrows;
+import org.junit.After;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -65,6 +70,28 @@ public class SecurityConfigTest {
 
     @Value("${custom.admin.password}")
     private String adminPassword;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private AuthService authService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @BeforeEach
+    void setUp() {
+        TestUtil.createAndRegisterUser(
+                userRepository,
+                adminUsername,
+                adminPassword,
+                Role.ADMIN,
+                authService,
+                passwordEncoder);
+    }
+
+    @AfterEach
+    void tearDown() {
+        userRepository.deleteAll();
+    }
 
     @Test
     void shouldPermitAllForWhiteListUrls() {
