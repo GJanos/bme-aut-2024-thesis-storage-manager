@@ -7,6 +7,7 @@ import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchema;
 import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchemaRepository;
 import com.bme.vik.aut.thesis.depot.general.admin.productschema.dto.CreateProductSchemaRequest;
 import com.bme.vik.aut.thesis.depot.general.order.Order;
+import com.bme.vik.aut.thesis.depot.general.order.OrderRepository;
 import com.bme.vik.aut.thesis.depot.general.order.OrderStatus;
 import com.bme.vik.aut.thesis.depot.general.supplier.inventory.Inventory;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.ExpiryStatus;
@@ -188,6 +189,20 @@ public class TestUtil {
                 savedUser.getSupplier(),
                 savedUser);
     }
+
+    public static Order createOrder(
+            OrderRepository orderRepository,
+            List<Product> products,
+            OrderStatus status,
+            Long userId) {
+        Order order = Order.builder()
+                .orderItems(products)
+                .status(status)
+                .userId(userId)
+                .build();
+        return orderRepository.save(order);
+    }
+
 
     public static Category createCategoryWithAPI(
             WebTestClient webTestClient,

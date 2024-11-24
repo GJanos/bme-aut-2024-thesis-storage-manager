@@ -190,7 +190,7 @@ public class InventoryService {
         Long productSchemaId = productSchema.getId();
         String productName = productSchema.getName();
 
-        logger.info("User '{}' with supplier ID: {} is adding: {} stock of: {}", user.getUsername(), supplierId, quantity, productName);
+        logger.info("Adding: {} stock of: {}", quantity, productName);
 
         // handle inventory full
         int fullSpaceNeeded = quantity * productSchema.getStorageSpaceNeeded();
@@ -224,7 +224,6 @@ public class InventoryService {
     @Transactional
     public ProductStockResponse removeStock(MyUser user, RemoveProductStockRequest request) {
         // validate request
-        String username = user.getUsername();
         validateSupplierExists(user);
 
         Long supplierId = user.getSupplier().getId();
@@ -239,7 +238,7 @@ public class InventoryService {
         validateProductSchema(inventoryId, productSchemaId);
         String productName = productSchema.getName();
 
-        logger.info("User '{}' with supplier ID: {} is removing: {} stock of: {}", username, supplierId, quantity, productName);
+        logger.info("Removing: {} stock of: {}", quantity, productName);
 
         if (!hasAvailableStock(inventoryId, productSchemaId, quantity)) {
             String errorMsg = "Too few stock of: " + productName + " in inventory for supplier ID: " + supplierId + ". Available stock: " + getCurrentStock(inventoryId, productSchemaId) + ", requested: " + quantity;
@@ -268,7 +267,6 @@ public class InventoryService {
 
     @Transactional
     public List<Product> getAllProductsInInventoryForUser(MyUser user) {
-        // TODO might just inventoryRepository.findAllProducts()
         validateSupplierExists(user);
         Long supplierId = user.getSupplier().getId();
         Inventory inventory = getInventoryBySupplierId(supplierId);
@@ -439,8 +437,8 @@ public class InventoryService {
 
     private void validateSupplierExists(MyUser user) {
         if (user.getSupplier() == null) {
-            logger.error("User '{}' does not have a supplier", user.getUsername());
-            throw new UserSupplierNotFoundException("User '" + user.getUsername() + "' does not have a supplier");
+            logger.error("User does not have a supplier");
+            throw new UserSupplierNotFoundException("User does not have a supplier");
         }
     }
 

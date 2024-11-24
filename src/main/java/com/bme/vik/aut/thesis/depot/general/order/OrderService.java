@@ -182,12 +182,14 @@ public class OrderService {
         // Retrieve all inventories that have current stock > 0 for this schema
         List<Inventory> inventoriesWithStock = inventoryService.getInventoriesWithStockForSchema(schema.getId());
 
-        // Sort inventories by soonest expiry date of the available products in each
-        inventoriesWithStock.sort((inventory1, inventory2) -> {
-            LocalDateTime earliestExpiryInInventory1 = inventoryService.getSoonestExpiryProduct(inventory1, schema).getExpiresAt();
-            LocalDateTime earliestExpiryInInventory2 = inventoryService.getSoonestExpiryProduct(inventory2, schema).getExpiresAt();
-            return earliestExpiryInInventory1.compareTo(earliestExpiryInInventory2);
-        });
+        if (inventoriesWithStock.size() > 1) {
+            // Sort inventories by soonest expiry date of the available products in each
+            inventoriesWithStock.sort((inventory1, inventory2) -> {
+                LocalDateTime earliestExpiryInInventory1 = inventoryService.getSoonestExpiryProduct(inventory1, schema).getExpiresAt();
+                LocalDateTime earliestExpiryInInventory2 = inventoryService.getSoonestExpiryProduct(inventory2, schema).getExpiresAt();
+                return earliestExpiryInInventory1.compareTo(earliestExpiryInInventory2);
+            });
+        }
 
         // Reserve products across inventories
         int remainingQuantity = productRequest.getQuantity();

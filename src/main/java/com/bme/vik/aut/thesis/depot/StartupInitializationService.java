@@ -8,6 +8,8 @@ import com.bme.vik.aut.thesis.depot.general.user.UserRepository;
 import com.bme.vik.aut.thesis.depot.security.user.MyUser;
 import com.bme.vik.aut.thesis.depot.security.user.Role;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -17,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @RequiredArgsConstructor
 public class StartupInitializationService implements CommandLineRunner {
+
+    private static final Logger logger = LoggerFactory.getLogger(StartupInitializationService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -36,7 +40,7 @@ public class StartupInitializationService implements CommandLineRunner {
 
     private void initializeAdminUser() {
         userRepository.findByUserName(adminUsername).ifPresentOrElse(
-                user -> System.out.println("Admin user already exists."),
+                user -> logger.info("Admin user already exists."),
                 () -> {
                     MyUser adminUser = MyUser.builder()
                             .userName(adminUsername)
@@ -44,7 +48,7 @@ public class StartupInitializationService implements CommandLineRunner {
                             .role(Role.ADMIN)
                             .build();
                     userRepository.save(adminUser);
-                    System.out.println("Admin user created successfully.");
+                    logger.info("Admin user created successfully.");
                 }
         );
     }

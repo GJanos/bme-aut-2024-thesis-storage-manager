@@ -612,7 +612,7 @@ class InventoryServiceTest {
             );
 
             //***** <-- then: Verify exception details --> *****//
-            assertEquals("User 'non_supplier_user' does not have a supplier", exception.getMessage());
+            assertEquals("User does not have a supplier", exception.getMessage());
         }
 
         @Test
