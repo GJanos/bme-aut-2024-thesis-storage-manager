@@ -5,7 +5,7 @@ on:
     branches:
       - main
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [ opened, synchronize, reopened ]
 
 jobs:
   build-and-test:
@@ -79,10 +79,20 @@ jobs:
 
       - name: Wait for the app to be ready
         run: |
-          sleep 30
+          # Sleep for a bit to let the container start up
+          sleep 20
           
-          curl -f http://app:8080/actuator/health || exit 1
-      
+          # Use lazy grep to search for the container ID that has 'app-1' in its name
+          APP_CONTAINER_ID=$(docker ps --filter "name=app-1" -q)
+          
+          # If the container ID is found, execute the health check inside it
+          if [ -n "$APP_CONTAINER_ID" ]; then
+            echo "Found container ID: $APP_CONTAINER_ID"
+            docker exec $APP_CONTAINER_ID curl -f http://127.0.0.1:8080/actuator/health || exit 1
+          else
+            echo "App container not found, exiting."
+            exit 1
+          fi
 
       - name: Stop Docker Compose
         if: always()
