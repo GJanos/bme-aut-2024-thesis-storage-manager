@@ -80,7 +80,7 @@ jobs:
       - name: Verify Application Health
         run: |
           sleep 30
-          curl -f http://localhost:8080/actuator/health || exit 1
+          curl -f http://127.0.0.1:8080/actuator/health || exit 1
 
       - name: Stop Docker Compose
         if: always()
