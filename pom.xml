@@ -33,7 +33,6 @@
         <jjwt.version>0.11.5</jjwt.version>
         <modelmapper.version>3.2.0</modelmapper.version>
         <postgresql.version>42.6.2</postgresql.version>
-        <testcontainers.version>1.20.1</testcontainers.version>
         <lombok.version>1.18.30</lombok.version>
         <spring.security.test.version>6.3.0</spring.security.test.version> <!-- Spring Security Test Version -->
         <openapi.version>2.6.0</openapi.version>
@@ -41,6 +40,9 @@
         <h2db.version>2.3.230</h2db.version>
         <jacoco.maven.plugin.version>0.8.8</jacoco.maven.plugin.version>
         <codehaus.mojo.version>1.0.0</codehaus.mojo.version>
+        <spring.context.support.version>6.1.5</spring.context.support.version>
+        <spring.boot.starter.mail.version>3.1.5</spring.boot.starter.mail.version>
+        <spring.boot.starter.actuator.version>3.3.3</spring.boot.starter.actuator.version>
     </properties>
 
     <dependencies>
@@ -126,6 +128,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Spring Actuator for Monitoring -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <version>${spring.boot.starter.actuator.version}</version>
+        </dependency>
+
         <!-- Testing Dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -151,30 +160,19 @@
             <version>${spring.security.test.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-testcontainers</artifactId>
-            <version>${spring.boot.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${testcontainers.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>${testcontainers.version}</version>
-            <scope>test</scope>
-        </dependency>
 
         <!-- API Documentation Dependencies -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>${openapi.version}</version>
+        </dependency>
+
+        <!-- Sending Emails -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+            <version>${spring.boot.starter.mail.version}</version>
         </dependency>
     </dependencies>
 

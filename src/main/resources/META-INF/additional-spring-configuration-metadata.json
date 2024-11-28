@@ -49,6 +49,16 @@
       "name": "custom.supplier.generate-random-password",
       "type": "java.lang.Boolean",
       "description": "Generate random password for suppliers users on creation."
+    },
+    {
+      "name": "custom.alert.mail.from",
+      "type": "java.lang.String",
+      "description": "Email address to use as sender."
+    },
+    {
+      "name": "custom.alert.mail.should-send",
+      "type": "java.lang.Boolean",
+      "description": "Enable or disable email alerts."
     }
   ]
 }

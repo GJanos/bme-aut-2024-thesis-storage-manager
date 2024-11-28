@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CreateSupplierRequest {
     private String name;
+    private String email;
     private Integer lowStockAlertThreshold;
     private Integer expiryAlertThreshold;
     private Integer reorderThreshold;

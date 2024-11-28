@@ -1,9 +1,6 @@
 package com.bme.vik.aut.thesis.depot.general.report;
 
-import com.bme.vik.aut.thesis.depot.exception.product.ProductNotFoundException;
-
-import java.util.Optional;
-
+import com.bme.vik.aut.thesis.depot.general.admin.category.Category;
 import com.bme.vik.aut.thesis.depot.general.order.Order;
 import com.bme.vik.aut.thesis.depot.general.order.OrderRepository;
 import com.bme.vik.aut.thesis.depot.general.order.OrderStatus;
@@ -13,16 +10,15 @@ import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryReposito
 import com.bme.vik.aut.thesis.depot.general.supplier.product.ExpiryStatus;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.Product;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductRepository;
-import com.bme.vik.aut.thesis.depot.general.admin.category.Category;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service

@@ -7,42 +7,13 @@ import com.bme.vik.aut.thesis.depot.general.alert.event.ProductExpiredAlertEvent
 import com.bme.vik.aut.thesis.depot.general.alert.event.ReorderAlertEvent;
 import com.bme.vik.aut.thesis.depot.general.supplier.inventory.Inventory;
 import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryRepository;
-import com.bme.vik.aut.thesis.depot.exception.category.CategoryNotFoundException;
-import com.bme.vik.aut.thesis.depot.exception.productschema.NonGreaterThanZeroStorageSpaceException;
-import com.bme.vik.aut.thesis.depot.exception.productschema.ProductSchemaAlreadyExistsException;
-import com.bme.vik.aut.thesis.depot.exception.productschema.ProductSchemaNotFoundException;
-import com.bme.vik.aut.thesis.depot.exception.user.UserNameAlreadyExistsException;
-import com.bme.vik.aut.thesis.depot.exception.user.UserNotFoundByIDException;
-import com.bme.vik.aut.thesis.depot.general.admin.category.Category;
-import com.bme.vik.aut.thesis.depot.general.admin.category.CategoryRepository;
-import com.bme.vik.aut.thesis.depot.general.admin.productschema.dto.CreateProductSchemaRequest;
+import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryService;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.ExpiryStatus;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.Product;
+import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductService;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductStatus;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.Supplier;
-import com.bme.vik.aut.thesis.depot.general.user.dto.UserModifyRequest;
-import com.bme.vik.aut.thesis.depot.general.user.dto.UserResponse;
-import com.bme.vik.aut.thesis.depot.security.user.MyUser;
-import com.bme.vik.aut.thesis.depot.security.user.Role;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-
-import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryService;
-import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -51,7 +22,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AlertServiceTest {
@@ -136,11 +114,13 @@ class AlertServiceTest {
     void shouldEmitExpiredProductEvent() {
         //***** <-- given: Create inventories and products --> *****//
         int expiryAlertThreshold = 7;
+
         Inventory inventory1 = Inventory.builder()
                 .id(1L)
                 .expiryAlertThreshold(expiryAlertThreshold)
                 .productIds(List.of(1L, 2L))
                 .build();
+
         Inventory inventory2 = Inventory.builder()
                 .id(2L)
                 .expiryAlertThreshold(expiryAlertThreshold)
@@ -161,14 +141,14 @@ class AlertServiceTest {
                 .schema(ProductSchema.builder().id(2L).build())
                 .build();
 
-        Product soonToExireProduct = Product.builder()
+        Product soonToExpireProduct = Product.builder()
                 .id(3L)
                 .expiresAt(LocalDateTime.now().plusDays(expiryAlertThreshold - 1))
                 .expiryStatus(ExpiryStatus.NOTEXPIRED)
                 .schema(ProductSchema.builder().id(3L).build())
                 .build();
 
-        Product notExiredProduct = Product.builder()
+        Product notExpiredProduct = Product.builder()
                 .id(4L)
                 .expiresAt(LocalDateTime.now().plusDays(expiryAlertThreshold + 1))
                 .expiryStatus(ExpiryStatus.NOTEXPIRED)
@@ -177,9 +157,9 @@ class AlertServiceTest {
 
         when(inventoryRepository.findAll()).thenReturn(List.of(inventory1, inventory2));
         when(productService.getProductById(1L)).thenReturn(longExpiredProduct);
-        when(productService.getProductById(2L)).thenReturn(soonToExireProduct);
-        when(productService.getProductById(3L)).thenReturn(expiredProduct);
-        when(productService.getProductById(4L)).thenReturn(notExiredProduct);
+        when(productService.getProductById(2L)).thenReturn(expiredProduct);
+        when(productService.getProductById(3L)).thenReturn(soonToExpireProduct);
+        when(productService.getProductById(4L)).thenReturn(notExpiredProduct);
         doNothing().when(inventoryService).changeProductExpirationStatus(any(), any(), any(), any());
         when(timeService.getCurrentTime()).thenReturn(LocalDateTime.now());
 
@@ -187,23 +167,26 @@ class AlertServiceTest {
         alertService.checkForExpiredProducts();
 
         //***** <-- then: Verify correct events are emitted --> *****//
-        verify(eventPublisher, times(2)).publishEvent(argThat(event -> {
+
+        // Verify for inventory1
+        verify(eventPublisher, times(1)).publishEvent(argThat(event -> {
             if (event instanceof ProductExpiredAlertEvent expiredEvent) {
-                if (expiredEvent.getProduct().getId() == 1L) {
-                    return expiredEvent.getProduct().getExpiryStatus() == ExpiryStatus.LONGEXPIRED;
-                }
-                if (expiredEvent.getProduct().getId() == 2L) {
-                    return expiredEvent.getProduct().getExpiryStatus() == ExpiryStatus.EXPIRED;
-                }
+                List<Product> products = expiredEvent.getProducts();
+                return expiredEvent.getInventory().getId() == 1L
+                        && products.size() == 2
+                        && products.stream().anyMatch(p -> p.getId() == 1L && p.getExpiryStatus() == ExpiryStatus.LONGEXPIRED)
+                        && products.stream().anyMatch(p -> p.getId() == 2L && p.getExpiryStatus() == ExpiryStatus.EXPIRED);
             }
             return false;
         }));
 
+        // Verify for inventory2
         verify(eventPublisher, times(1)).publishEvent(argThat(event -> {
             if (event instanceof ProductExpiredAlertEvent expiredEvent) {
-                if (expiredEvent.getProduct().getId() == 3L) {
-                    return expiredEvent.getProduct().getExpiryStatus() == ExpiryStatus.SOONTOEXPIRE;
-                }
+                List<Product> products = expiredEvent.getProducts();
+                return expiredEvent.getInventory().getId() == 2L
+                        && products.size() == 1
+                        && products.stream().anyMatch(p -> p.getId() == 3L && p.getExpiryStatus() == ExpiryStatus.SOONTOEXPIRE);
             }
             return false;
         }));
@@ -248,7 +231,6 @@ class AlertServiceTest {
         ); // stock size does not matter
 
         when(inventoryService.getInventoryById(inventoryId)).thenReturn(inventory);
-        when(productSchemaService.getProductSchemaById(productSchemaId)).thenReturn(product.getSchema());
         when(inventoryService.lowOnStock(inventory, productSchemaId)).thenReturn(false);
         when(inventoryService.needsReorderForStock(inventory, productSchemaId)).thenReturn(false);
 
@@ -288,7 +270,6 @@ class AlertServiceTest {
         ); // stock size does not matter
 
         when(inventoryService.getInventoryById(inventoryId)).thenReturn(inventory);
-        when(productSchemaService.getProductSchemaById(productSchemaId)).thenReturn(product.getSchema());
 
         //***** <-- when: Stock check is triggered --> *****//
         alertService.checkStockForReorder(stock);
@@ -301,6 +282,7 @@ class AlertServiceTest {
     void shouldEmitLowStockAlertEvent() {
         //***** <-- given: Stock with a product requiring low stock alert --> *****//
         ReflectionTestUtils.setField(alertService, "AUTO_REORDER_ENABLED", false);
+
         Long inventoryId = 1L;
         Long productSchemaId = 1L;
         String productName = "Test Product 1";
@@ -313,36 +295,37 @@ class AlertServiceTest {
                 .supplier(Supplier.builder().id(supplierId).build())
                 .build();
 
-        ProductSchema productSchema = ProductSchema.builder().id(productSchemaId).name(productName).build();
+        ProductSchema productSchema1 = ProductSchema.builder().id(productSchemaId).name(productName).build();
+        ProductSchema productSchema3 = ProductSchema.builder().id(productSchemaId3).name(productName3).build();
 
-        Product product = Product.builder()
+        Product product1 = Product.builder()
                 .id(1L)
-                .schema(productSchema)
+                .schema(productSchema1)
                 .status(ProductStatus.FREE)
                 .build();
 
         Product product2 = Product.builder()
                 .id(2L)
-                .schema(productSchema)
+                .schema(productSchema1)
                 .status(ProductStatus.FREE)
                 .build();
 
         Product product3 = Product.builder()
                 .id(3L)
-                .schema(ProductSchema.builder().id(productSchemaId3).name(productName3).build())
+                .schema(productSchema3)
                 .status(ProductStatus.FREE)
                 .build();
 
         Map<Long, Map<Long, List<Product>>> stock = Map.of(
                 inventoryId, Map.of(
-                        productSchemaId, List.of(product, product2),
+                        productSchemaId, List.of(product1, product2),
                         productSchemaId3, List.of(product3)
                 )
         );
 
         when(inventoryService.getInventoryById(inventoryId)).thenReturn(inventory);
-        when(productSchemaService.getProductSchemaById(productSchemaId)).thenReturn(product.getSchema());
-        when(productSchemaService.getProductSchemaById(productSchemaId3)).thenReturn(product3.getSchema());
+        when(productSchemaService.getProductSchemaById(productSchemaId)).thenReturn(productSchema1);
+        when(productSchemaService.getProductSchemaById(productSchemaId3)).thenReturn(productSchema3);
         when(inventoryService.lowOnStock(inventory, productSchemaId)).thenReturn(true);
         when(inventoryService.lowOnStock(inventory, productSchemaId3)).thenReturn(true);
 
@@ -350,13 +333,23 @@ class AlertServiceTest {
         alertService.checkStockForReorder(stock);
 
         //***** <-- then: Verify low stock alert event is emitted --> *****//
-        verify(eventPublisher, times(2)).publishEvent(argThat(event -> {
+        verify(eventPublisher, times(1)).publishEvent(argThat(event -> {
             if (event instanceof LowStockAlertEvent lowStockEvent) {
-                if (lowStockEvent.getProduct().getId() == 1L) {
-                    return lowStockEvent.getProduct().getSchema().getName().equals(productName);
-                }else if (lowStockEvent.getProduct().getId() == 3L) {
-                    return lowStockEvent.getProduct().getSchema().getName().equals(productName3);
+                Map<ProductSchema, List<Product>> stockMap = lowStockEvent.getStock();
+
+                // Verify event is for the correct inventory
+                if (!lowStockEvent.getInventory().getId().equals(inventoryId)) {
+                    return false;
                 }
+
+                // Verify stock contains the correct mappings
+                return stockMap.size() == 2 &&
+                        stockMap.containsKey(productSchema1) &&
+                        stockMap.get(productSchema1).size() == 2 &&
+                        stockMap.get(productSchema1).containsAll(List.of(product1, product2)) &&
+                        stockMap.containsKey(productSchema3) &&
+                        stockMap.get(productSchema3).size() == 1 &&
+                        stockMap.get(productSchema3).contains(product3);
             }
             return false;
         }));
@@ -379,30 +372,35 @@ class AlertServiceTest {
                 .supplier(Supplier.builder().id(supplierId).build())
                 .build();
 
-        ProductSchema productSchema = ProductSchema.builder().id(productSchemaId).name(productName).build();
+        ProductSchema productSchema1 = ProductSchema.builder().id(productSchemaId).name(productName).build();
+        ProductSchema productSchema3 = ProductSchema.builder().id(productSchemaId3).name(productName3).build();
 
-        Product product = Product.builder()
+        Product product1 = Product.builder()
                 .id(1L)
-                .schema(productSchema)
+                .schema(productSchema1)
                 .status(ProductStatus.FREE)
+                .description("Description for Product 1")
+                .expiresAt(LocalDateTime.now().plusDays(10))
                 .build();
 
         Product product3 = Product.builder()
                 .id(3L)
-                .schema(ProductSchema.builder().id(productSchemaId3).name(productName3).build())
+                .schema(productSchema3)
                 .status(ProductStatus.FREE)
+                .description("Description for Product 3")
+                .expiresAt(LocalDateTime.now().plusDays(15))
                 .build();
 
         Map<Long, Map<Long, List<Product>>> stock = Map.of(
                 inventoryId, Map.of(
-                        productSchemaId, List.of(product),
+                        productSchemaId, List.of(product1),
                         productSchemaId3, List.of(product3)
                 )
         );
 
         when(inventoryService.getInventoryById(inventoryId)).thenReturn(inventory);
-        when(productSchemaService.getProductSchemaById(productSchemaId)).thenReturn(product.getSchema());
-        when(productSchemaService.getProductSchemaById(productSchemaId3)).thenReturn(product3.getSchema());
+        when(productSchemaService.getProductSchemaById(productSchemaId)).thenReturn(productSchema1);
+        when(productSchemaService.getProductSchemaById(productSchemaId3)).thenReturn(productSchema3);
         when(inventoryService.needsReorderForStock(inventory, productSchemaId)).thenReturn(true);
         when(inventoryService.needsReorderForStock(inventory, productSchemaId3)).thenReturn(true);
 
@@ -410,13 +408,29 @@ class AlertServiceTest {
         alertService.checkStockForReorder(stock);
 
         //***** <-- then: Verify reorder alert event is emitted --> *****//
-        verify(eventPublisher, times(2)).publishEvent(argThat(event -> {
+        verify(eventPublisher, times(1)).publishEvent(argThat(event -> {
             if (event instanceof ReorderAlertEvent reorderAlertEvent) {
-                if (reorderAlertEvent.getProduct().getId() == 1L) {
-                    return reorderAlertEvent.getProduct().getSchema().getName().equals(productName);
-                } else if (reorderAlertEvent.getProduct().getId() == 3L) {
-                    return reorderAlertEvent.getProduct().getSchema().getName().equals(productName3);
+                List<InternalReorder> reorders = reorderAlertEvent.getReorders();
+
+                // Verify event is for the correct inventory
+                if (!reorderAlertEvent.getInventory().getId().equals(inventoryId)) {
+                    return false;
                 }
+
+                // Verify reorders contain correct details
+                return reorders.size() == 2 &&
+                        reorders.stream().anyMatch(r ->
+                                r.getProductSchema().getId().equals(productSchemaId) &&
+                                        r.getProductSchema().getName().equals(productName) &&
+                                        r.getProductDescription().equals("Description for Product 1") &&
+                                        r.getExpiresAt().equals(product1.getExpiresAt())
+                        ) &&
+                        reorders.stream().anyMatch(r ->
+                                r.getProductSchema().getId().equals(productSchemaId3) &&
+                                        r.getProductSchema().getName().equals(productName3) &&
+                                        r.getProductDescription().equals("Description for Product 3") &&
+                                        r.getExpiresAt().equals(product3.getExpiresAt())
+                        );
             }
             return false;
         }));
@@ -440,30 +454,35 @@ class AlertServiceTest {
                 .supplier(Supplier.builder().id(supplierId).build())
                 .build();
 
-        ProductSchema productSchema = ProductSchema.builder().id(productSchemaId).name(productName).build();
+        ProductSchema productSchema1 = ProductSchema.builder().id(productSchemaId).name(productName).build();
+        ProductSchema productSchema3 = ProductSchema.builder().id(productSchemaId3).name(productName3).build();
 
-        Product product = Product.builder()
+        Product product1 = Product.builder()
                 .id(1L)
-                .schema(productSchema)
+                .schema(productSchema1)
                 .status(ProductStatus.FREE)
+                .description("Description for Product 1")
+                .expiresAt(LocalDateTime.now().plusDays(10))
                 .build();
 
         Product product3 = Product.builder()
                 .id(3L)
-                .schema(ProductSchema.builder().id(productSchemaId3).name(productName3).build())
+                .schema(productSchema3)
                 .status(ProductStatus.FREE)
+                .description("Description for Product 3")
+                .expiresAt(LocalDateTime.now().plusDays(15))
                 .build();
 
         Map<Long, Map<Long, List<Product>>> stock = Map.of(
                 inventoryId, Map.of(
-                        productSchemaId, List.of(product),
+                        productSchemaId, List.of(product1),
                         productSchemaId3, List.of(product3)
                 )
         );
 
         when(inventoryService.getInventoryById(inventoryId)).thenReturn(inventory);
-        when(productSchemaService.getProductSchemaById(productSchemaId)).thenReturn(product.getSchema());
-        when(productSchemaService.getProductSchemaById(productSchemaId3)).thenReturn(product3.getSchema());
+        when(productSchemaService.getProductSchemaById(productSchemaId)).thenReturn(productSchema1);
+        when(productSchemaService.getProductSchemaById(productSchemaId3)).thenReturn(productSchema3);
         when(inventoryService.lowOnStock(inventory, productSchemaId)).thenReturn(true);
         when(inventoryService.lowOnStock(inventory, productSchemaId3)).thenReturn(true);
         when(inventoryService.needsReorderForStock(inventory, productSchemaId)).thenReturn(true);
@@ -472,20 +491,52 @@ class AlertServiceTest {
         //***** <-- when: Stock check is triggered --> *****//
         alertService.checkStockForReorder(stock);
 
-        //***** <-- then: Verify both low stock and reorder alert events are emitted --> *****//
-        verify(eventPublisher, times(4)).publishEvent(argThat(event -> {
+        //***** <-- then: Verify low stock alert event is emitted --> *****//
+        verify(eventPublisher, times(1)).publishEvent(argThat(event -> {
             if (event instanceof LowStockAlertEvent lowStockEvent) {
-                if (lowStockEvent.getProduct().getId() == 1L) {
-                    return lowStockEvent.getProduct().getSchema().getName().equals(productName);
-                } else if (lowStockEvent.getProduct().getId() == 3L) {
-                    return lowStockEvent.getProduct().getSchema().getName().equals(productName3);
+                Map<ProductSchema, List<Product>> stockMap = lowStockEvent.getStock();
+
+                // Verify event is for the correct inventory
+                if (!lowStockEvent.getInventory().getId().equals(inventoryId)) {
+                    return false;
                 }
-            } else if (event instanceof ReorderAlertEvent reorderEvent) {
-                if (reorderEvent.getProduct().getId() == 1L) {
-                    return reorderEvent.getProduct().getSchema().getName().equals(productName);
-                } else if (reorderEvent.getProduct().getId() == 3L) {
-                    return reorderEvent.getProduct().getSchema().getName().equals(productName3);
+
+                // Verify stock contains the correct mappings
+                return stockMap.size() == 2 &&
+                        stockMap.containsKey(productSchema1) &&
+                        stockMap.get(productSchema1).size() == 1 &&
+                        stockMap.get(productSchema1).contains(product1) &&
+                        stockMap.containsKey(productSchema3) &&
+                        stockMap.get(productSchema3).size() == 1 &&
+                        stockMap.get(productSchema3).contains(product3);
+            }
+            return false;
+        }));
+
+        //***** <-- then: Verify reorder alert event is emitted --> *****//
+        verify(eventPublisher, times(1)).publishEvent(argThat(event -> {
+            if (event instanceof ReorderAlertEvent reorderAlertEvent) {
+                List<InternalReorder> reorders = reorderAlertEvent.getReorders();
+
+                // Verify event is for the correct inventory
+                if (!reorderAlertEvent.getInventory().getId().equals(inventoryId)) {
+                    return false;
                 }
+
+                // Verify reorders contain correct details
+                return reorders.size() == 2 &&
+                        reorders.stream().anyMatch(r ->
+                                r.getProductSchema().getId().equals(productSchemaId) &&
+                                        r.getProductSchema().getName().equals(productName) &&
+                                        r.getProductDescription().equals("Description for Product 1") &&
+                                        r.getExpiresAt().equals(product1.getExpiresAt())
+                        ) &&
+                        reorders.stream().anyMatch(r ->
+                                r.getProductSchema().getId().equals(productSchemaId3) &&
+                                        r.getProductSchema().getName().equals(productName3) &&
+                                        r.getProductDescription().equals("Description for Product 3") &&
+                                        r.getExpiresAt().equals(product3.getExpiresAt())
+                        );
             }
             return false;
         }));

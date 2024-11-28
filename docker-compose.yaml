@@ -4,25 +4,26 @@ services:
     ports:
       - "5432:5432"
     env_file:
-      - .env
-#    networks:
-#      - backend
+      - .env.postgres
+    networks:
+      - backend
+    volumes:
+      - app_volume:/var/lib/postgresql/data
 
-#  app:
-#    build: .
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
-#      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USERNAME}
-#      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-#      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-#      ADMIN_USERNAME: ${ADMIN_USERNAME}
-#      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-#    ports:
-#      - "8080:8080"
-#    depends_on:
-#      - postgres
-#    networks:
-#      - backend
-#
-#networks:
-#  backend:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env.app
+    depends_on:
+      - postgres
+    networks:
+      - backend
+
+networks:
+  backend:
+
+volumes:
+  app_volume:
+    driver: local

@@ -15,7 +15,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import static com.bme.vik.aut.thesis.depot.security.user.Permission.USER_CREATE;
 import static com.bme.vik.aut.thesis.depot.security.user.Permission.USER_READ;
 import static com.bme.vik.aut.thesis.depot.security.user.Role.ADMIN;
-import static com.bme.vik.aut.thesis.depot.security.user.Role.USER;
 import static com.bme.vik.aut.thesis.depot.security.user.Role.SUPPLIER;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
@@ -29,7 +28,8 @@ public class SecurityConfig {
             "/auth/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/v3/api-docs/**"
+            "/v3/api-docs/**",
+            "/actuator/**",
     };
 
     private final JwtAuthFilter jwtAuthFilter;

@@ -1,7 +1,5 @@
 package com.bme.vik.aut.thesis.depot.general.info;
 
-import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryService;
-import com.bme.vik.aut.thesis.depot.general.util.TestUtil;
 import com.bme.vik.aut.thesis.depot.general.admin.category.CategoryRepository;
 import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchemaRepository;
 import com.bme.vik.aut.thesis.depot.general.info.dto.OrderItemResponse;
@@ -11,6 +9,7 @@ import com.bme.vik.aut.thesis.depot.general.info.dto.SupplierResponse;
 import com.bme.vik.aut.thesis.depot.general.order.Order;
 import com.bme.vik.aut.thesis.depot.general.order.OrderRepository;
 import com.bme.vik.aut.thesis.depot.general.order.OrderStatus;
+import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryService;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.Product;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductRepository;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductStatus;
@@ -18,6 +17,7 @@ import com.bme.vik.aut.thesis.depot.general.supplier.supplier.Supplier;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.SupplierRepository;
 import com.bme.vik.aut.thesis.depot.general.user.UserRepository;
 import com.bme.vik.aut.thesis.depot.general.user.dto.UserResponse;
+import com.bme.vik.aut.thesis.depot.general.util.TestUtil;
 import com.bme.vik.aut.thesis.depot.security.auth.AuthService;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.RegisterRequest;
 import com.bme.vik.aut.thesis.depot.security.user.MyUser;
@@ -33,13 +33,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.junit.jupiter.api.Assertions.*;
+
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient

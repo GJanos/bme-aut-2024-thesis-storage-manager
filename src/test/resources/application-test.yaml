@@ -21,9 +21,5 @@ custom:
     should-check-expiration: false
   alert:
     expiry-check-interval-ms: 5000 # 5 seconds in milliseconds
-
-#application:
-#  security:
-#    jwt:
-#      secret-key: rg26e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e
-#      expiration: 3600000 # 1 hour in milliseconds
+    mail:
+      should-send: false

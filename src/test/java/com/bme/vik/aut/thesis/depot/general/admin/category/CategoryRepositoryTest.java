@@ -1,7 +1,5 @@
 package com.bme.vik.aut.thesis.depot.general.admin.category;
 
-import com.bme.vik.aut.thesis.depot.general.user.UserRepository;
-import com.bme.vik.aut.thesis.depot.security.user.MyUser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,7 +11,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)

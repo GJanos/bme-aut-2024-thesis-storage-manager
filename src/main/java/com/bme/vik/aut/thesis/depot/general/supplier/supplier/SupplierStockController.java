@@ -1,7 +1,6 @@
 package com.bme.vik.aut.thesis.depot.general.supplier.supplier;
 
 import com.bme.vik.aut.thesis.depot.general.report.dto.InventoryState;
-import com.bme.vik.aut.thesis.depot.general.supplier.inventory.Inventory;
 import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryService;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.Product;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.dto.CreateProductStockRequest;

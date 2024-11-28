@@ -4,7 +4,6 @@ import com.bme.vik.aut.thesis.depot.exception.supplier.InvalidCreateSupplierRequ
 import com.bme.vik.aut.thesis.depot.exception.supplier.SupplierAlreadyExistsException;
 import com.bme.vik.aut.thesis.depot.exception.supplier.SupplierNotFoundException;
 import com.bme.vik.aut.thesis.depot.general.supplier.inventory.Inventory;
-import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryRepository;
 import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryService;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.dto.CreateSupplierRequest;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.dto.SupplierCreationResponse;
@@ -71,6 +70,7 @@ public class SupplierService {
         // Create Supplier
         Supplier supplier = Supplier.builder()
                 .name(request.getName())
+                .email(request.getEmail())
                 .inventory(inventory)
                 .build();
 
@@ -117,6 +117,7 @@ public class SupplierService {
         verifySupplierRequest(request);
 
         supplier.setName(request.getName());
+        supplier.setEmail(request.getEmail());
         inventoryService.updateInventory(supplier.getInventory(), request);
 
         Supplier updatedSupplier = supplierRepository.save(supplier);

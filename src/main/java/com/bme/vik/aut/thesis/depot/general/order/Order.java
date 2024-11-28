@@ -1,8 +1,6 @@
 package com.bme.vik.aut.thesis.depot.general.order;
 
 import com.bme.vik.aut.thesis.depot.general.supplier.product.Product;
-import com.bme.vik.aut.thesis.depot.general.supplier.supplier.Supplier;
-import com.bme.vik.aut.thesis.depot.security.user.MyUser;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

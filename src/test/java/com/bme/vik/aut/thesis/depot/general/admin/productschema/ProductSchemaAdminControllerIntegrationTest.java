@@ -6,7 +6,6 @@ import com.bme.vik.aut.thesis.depot.general.admin.category.Category;
 import com.bme.vik.aut.thesis.depot.general.admin.category.CategoryRepository;
 import com.bme.vik.aut.thesis.depot.general.admin.productschema.dto.CreateProductSchemaRequest;
 import com.bme.vik.aut.thesis.depot.security.auth.AuthService;
-import com.bme.vik.aut.thesis.depot.security.auth.dto.AuthRequest;
 import com.bme.vik.aut.thesis.depot.security.auth.dto.RegisterRequest;
 import com.bme.vik.aut.thesis.depot.security.user.Role;
 import org.junit.jupiter.api.AfterEach;

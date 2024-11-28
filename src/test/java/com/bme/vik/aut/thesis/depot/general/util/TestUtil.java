@@ -268,6 +268,7 @@ public class TestUtil {
     ) {
         CreateSupplierRequest createSupplierRequest = CreateSupplierRequest.builder()
                 .name(supplierName)
+                .email("example@email.com")
                 .lowStockAlertThreshold(lowStockAlertThreshold)
                 .expiryAlertThreshold(expiryAlertThreshold)
                 .reorderThreshold(reorderThreshold)
@@ -390,7 +391,6 @@ public class TestUtil {
                             assertEquals(orderItemByProdName.getProductName(), orderProduct.getSchema().getName());
                         } else if (orderItem instanceof OrderItemByProdSupplName orderItemByProdSupplName) {
                             assertEquals(orderItemByProdSupplName.getProductName(), orderProduct.getSchema().getName());
-                            // TODO assertEquals(orderItemByProdSupplName.getSupplierName(), orderProduct.().getName());
                         }
 
                         // Assert timestamps

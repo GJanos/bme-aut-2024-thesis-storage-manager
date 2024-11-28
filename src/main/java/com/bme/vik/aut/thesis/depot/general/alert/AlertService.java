@@ -1,5 +1,6 @@
 package com.bme.vik.aut.thesis.depot.general.alert;
 
+import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchema;
 import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchemaService;
 import com.bme.vik.aut.thesis.depot.general.alert.event.LowStockAlertEvent;
 import com.bme.vik.aut.thesis.depot.general.alert.event.ProductExpiredAlertEvent;
@@ -19,10 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -47,8 +45,6 @@ public class AlertService {
     @Setter
     private InventoryService inventoryService;
 
-    private final Queue<Runnable> eventQueue = new LinkedList<>();
-
     @Scheduled(fixedRateString = "${custom.alert.expiry-check-interval-ms}", initialDelay = 10000)
     @Transactional
     public void checkForExpiredProducts() {
@@ -62,6 +58,8 @@ public class AlertService {
         List<Inventory> inventories = inventoryRepository.findAll();
 
         for (Inventory inventory : inventories) {
+            List<Product> expiredProducts = new ArrayList<>();
+
             for (Long productId : inventory.getProductIds()) {
                 Product product = productService.getProductById(productId);
 
@@ -74,13 +72,19 @@ public class AlertService {
 
                     product.setExpiryStatus(newExpiryStatus);
                     inventoryService.changeProductExpirationStatus(inventory.getId(), product.getSchema().getId(), productId, newExpiryStatus);
+                }
 
-                    eventQueue.add(() -> emitProductExpiredEvent(inventory, product));
+                if (newExpiryStatus != ExpiryStatus.NOTEXPIRED && product.getStatus() != ProductStatus.REMOVED) {
+                    expiredProducts.add(product);
                 }
             }
+
+            if (!expiredProducts.isEmpty()) {
+                eventPublisher.publishEvent(new ProductExpiredAlertEvent(this, inventory, expiredProducts));
+            }
         }
+
         logger.info("Expiry check completed.");
-        processEventQueue();
     }
 
     public void checkStockForReorder(Map<Long, Map<Long, List<Product>>> stock) {
@@ -89,31 +93,31 @@ public class AlertService {
         stock.forEach((inventoryId, productSchemaMap) -> {
             Inventory inventory = inventoryService.getInventoryById(inventoryId);
 
+            Map<ProductSchema, List<Product>> lowStockProducts = new HashMap<>();
+            List<InternalReorder> reorderProducts = new ArrayList<>();
+
             productSchemaMap.forEach((productSchemaId, products) -> {
-                String productName = productSchemaService.getProductSchemaById(productSchemaId).getName();
-                Long supplierId = inventory.getSupplier().getId();
-
-                logger.info("Checking product schema ID: {} (Product: {}) for supplier ID: {}", productSchemaId, productName, supplierId);
-
                 if (LOW_STOCK_ALERT_ENABLED && inventoryService.lowOnStock(inventory, productSchemaId)) {
-                    Product product = products.get(0); // Just need a product for the event
-                    eventQueue.add(() -> emitLowStockAlertEvent(inventory, product));
+                    List<Product> temp = new ArrayList<>();
+                    products.stream()
+                            .filter(product -> product.getStatus() != ProductStatus.REMOVED)
+                            .forEach(temp::add);
+                    lowStockProducts.put(productSchemaService.getProductSchemaById(productSchemaId), temp);
                 }
 
                 if (AUTO_REORDER_ENABLED && inventoryService.needsReorderForStock(inventory, productSchemaId)) {
-                    Product product = products.get(0); // Just need a product for the event
-                    eventQueue.add(() -> emitReorderEvent(inventory, product));
+                    reorderProducts.add(new InternalReorder(productSchemaService.getProductSchemaById(productSchemaId), products.get(0).getDescription(), products.get(0).getExpiresAt()));
                 }
             });
+
+            if (!lowStockProducts.isEmpty()) {
+                eventPublisher.publishEvent(new LowStockAlertEvent(this, inventory, lowStockProducts));
+            }
+
+            if (!reorderProducts.isEmpty()) {
+                eventPublisher.publishEvent(new ReorderAlertEvent(this, inventory, reorderProducts));
+            }
         });
-
-        processEventQueue();
-    }
-
-    private void processEventQueue() {
-        while (!eventQueue.isEmpty()) {
-            eventQueue.poll().run(); // Execute each queued event
-        }
     }
 
     public ExpiryStatus determineExpiryStatus(LocalDateTime expiryDate, int expiryAlertThreshold) {
@@ -127,20 +131,5 @@ public class AlertService {
         } else {
             return ExpiryStatus.NOTEXPIRED;
         }
-    }
-
-    private void emitReorderEvent(Inventory inventory, Product product) {
-        logger.info("Emitting reorder event for product ID: {} in inventory ID: {}", product.getId(), inventory.getId());
-        eventPublisher.publishEvent(new ReorderAlertEvent(this, inventory, product));
-    }
-
-    private void emitLowStockAlertEvent(Inventory inventory, Product product) {
-        logger.info("Emitting low stock alert event for product ID: {} in inventory ID: {}", product.getId(), inventory.getId());
-        eventPublisher.publishEvent(new LowStockAlertEvent(this, inventory, product));
-    }
-
-    private void emitProductExpiredEvent(Inventory inventory, Product product) {
-        logger.info("Emitting product expired event for product ID: {} in inventory ID: {}", product.getId(), inventory.getId());
-        eventPublisher.publishEvent(new ProductExpiredAlertEvent(this, inventory, product));
     }
 }

@@ -95,7 +95,7 @@ public class SupplierAdminController {
                             mediaType = "application/json",
                             schema = @Schema(implementation = CreateSupplierRequest.class),
                             examples = @ExampleObject(
-                                    value = "{ \"name\": \"supplier\", \"lowStockAlertThreshold\": 50, \"expiryAlertThreshold\": 30, \"reorderThreshold\": 20, \"reorderQuantity\": 100 }"
+                                    value = "{ \"name\": \"supplier\", \"email\": \"supplier@example.com\", \"lowStockAlertThreshold\": 5, \"expiryAlertThreshold\": 3, \"reorderThreshold\": 2, \"reorderQuantity\": 1 }"
                             )
                     )
             )
@@ -103,6 +103,7 @@ public class SupplierAdminController {
         SupplierCreationResponse response = supplierService.createSupplier(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
 
     @Operation(
             summary = "Update supplier by ID",
@@ -132,7 +133,7 @@ public class SupplierAdminController {
                             mediaType = "application/json",
                             schema = @Schema(implementation = CreateSupplierRequest.class),
                             examples = @ExampleObject(
-                                    value = "{ \"name\": \"XYZ Supplies Updated\", \"lowStockAlertThreshold\": 40, \"expiryAlertThreshold\": 20, \"reorderThreshold\": 15, \"reorderQuantity\": 50 }"
+                                    value = "{ \"name\": \"XYZ Supplies Updated\", \"email\": \"updated-supplier@example.com\", \"lowStockAlertThreshold\": 40, \"expiryAlertThreshold\": 20, \"reorderThreshold\": 15, \"reorderQuantity\": 50 }"
                             )
                     )
             )

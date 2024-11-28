@@ -3,7 +3,6 @@ package com.bme.vik.aut.thesis.depot.general.info;
 import com.bme.vik.aut.thesis.depot.exception.category.CategoryNotFoundException;
 import com.bme.vik.aut.thesis.depot.general.admin.category.Category;
 import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchema;
-import com.bme.vik.aut.thesis.depot.general.info.dto.OrderItemResponse;
 import com.bme.vik.aut.thesis.depot.general.info.dto.OrderResponse;
 import com.bme.vik.aut.thesis.depot.general.info.dto.ProductResponse;
 import com.bme.vik.aut.thesis.depot.general.info.dto.SupplierResponse;

@@ -10,12 +10,9 @@ import com.bme.vik.aut.thesis.depot.general.order.dto.CreateOrderRequest;
 import com.bme.vik.aut.thesis.depot.general.supplier.inventory.Inventory;
 import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryService;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.Product;
-import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductRepository;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductService;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.Supplier;
-import com.bme.vik.aut.thesis.depot.general.supplier.supplier.SupplierRepository;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.SupplierService;
-import com.bme.vik.aut.thesis.depot.general.user.UserRepository;
 import com.bme.vik.aut.thesis.depot.security.user.MyUser;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -37,9 +34,6 @@ public class OrderService {
     private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
 
     private final OrderRepository orderRepository;
-    private final ProductRepository productRepository;
-    private final SupplierRepository supplierRepository;
-    private final UserRepository userRepository;
     private final InventoryService inventoryService;
     private final ProductService productService;
     private final SupplierService supplierService;

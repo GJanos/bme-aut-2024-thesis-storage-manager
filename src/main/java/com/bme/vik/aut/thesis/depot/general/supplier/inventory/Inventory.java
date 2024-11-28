@@ -1,15 +1,8 @@
 package com.bme.vik.aut.thesis.depot.general.supplier.inventory;
 
-import com.bme.vik.aut.thesis.depot.exception.inventory.InventoryFullException;
-import com.bme.vik.aut.thesis.depot.exception.inventory.InventoryOutOfStockException;
-import com.bme.vik.aut.thesis.depot.exception.product.ProductNotFoundException;
-import com.bme.vik.aut.thesis.depot.exception.supplier.SupplierNotFoundException;
 import com.bme.vik.aut.thesis.depot.general.supplier.product.Product;
-import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchema;
-import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductRepository;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.Supplier;
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,7 +12,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data

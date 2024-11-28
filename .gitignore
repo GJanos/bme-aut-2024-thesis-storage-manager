@@ -32,6 +32,7 @@ build/
 .vscode/
 
 ### Own ###
-.env
+.env.postgres
+.env.app
 todo.md
 .run/

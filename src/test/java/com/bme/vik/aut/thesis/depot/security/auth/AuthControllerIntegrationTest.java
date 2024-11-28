@@ -20,7 +20,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -32,9 +31,6 @@ class AuthControllerIntegrationTest {
 
     @Autowired
     private WebTestClient webTestClient;
-
-    @Autowired
-    private AuthService authService;
 
     @Autowired
     private UserRepository userRepository;

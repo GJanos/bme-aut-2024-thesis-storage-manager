@@ -1,24 +1,20 @@
 package com.bme.vik.aut.thesis.depot.general.alert.event;
 
+import com.bme.vik.aut.thesis.depot.general.alert.InternalReorder;
 import com.bme.vik.aut.thesis.depot.general.supplier.inventory.Inventory;
-import com.bme.vik.aut.thesis.depot.general.supplier.product.Product;
+import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
+import java.util.List;
+
+@Getter
 public class ReorderAlertEvent extends ApplicationEvent {
     private final Inventory inventory;
-    private final Product product;
+    private final List<InternalReorder> reorders;
 
-    public ReorderAlertEvent(Object source, Inventory inventory, Product product) {
+    public ReorderAlertEvent(Object source, Inventory inventory, List<InternalReorder> reorders) {
         super(source);
         this.inventory = inventory;
-        this.product = product;
-    }
-
-    public Inventory getInventory() {
-        return inventory;
-    }
-
-    public Product getProduct() {
-        return product;
+        this.reorders = reorders;
     }
 }

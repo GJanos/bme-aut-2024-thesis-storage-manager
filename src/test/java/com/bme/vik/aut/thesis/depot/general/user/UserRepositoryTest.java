@@ -16,22 +16,9 @@ import java.util.Optional;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @DataJpaTest
-//@Testcontainers
-//@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @ActiveProfiles("test")
-//@SpringJUnitConfig(UserRepositoryTest.TestConfig.class)
 class UserRepositoryTest {
-
-//    @TestConfiguration
-//    static class TestConfig {
-//
-//        @Bean
-//        @Primary
-//        public PasswordEncoder passwordEncoder() {
-//            return new BCryptPasswordEncoder();
-//        }
-//    }
 
     @MockBean
     private PasswordEncoder passwordEncoder;

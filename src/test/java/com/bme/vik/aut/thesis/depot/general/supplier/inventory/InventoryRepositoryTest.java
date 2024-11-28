@@ -1,63 +1,14 @@
 package com.bme.vik.aut.thesis.depot.general.supplier.inventory;
 
-import com.bme.vik.aut.thesis.depot.exception.product.ProductNotFoundException;
-import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchema;
-import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchemaRepository;
-import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchemaService;
-import com.bme.vik.aut.thesis.depot.general.alert.event.LowStockAlertEvent;
-import com.bme.vik.aut.thesis.depot.general.alert.event.ProductExpiredAlertEvent;
-import com.bme.vik.aut.thesis.depot.general.alert.event.ReorderAlertEvent;
-import com.bme.vik.aut.thesis.depot.general.supplier.inventory.Inventory;
-import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryRepository;
-import com.bme.vik.aut.thesis.depot.exception.category.CategoryNotFoundException;
-import com.bme.vik.aut.thesis.depot.exception.productschema.NonGreaterThanZeroStorageSpaceException;
-import com.bme.vik.aut.thesis.depot.exception.productschema.ProductSchemaAlreadyExistsException;
-import com.bme.vik.aut.thesis.depot.exception.productschema.ProductSchemaNotFoundException;
-import com.bme.vik.aut.thesis.depot.exception.user.UserNameAlreadyExistsException;
-import com.bme.vik.aut.thesis.depot.exception.user.UserNotFoundByIDException;
-import com.bme.vik.aut.thesis.depot.general.admin.category.Category;
 import com.bme.vik.aut.thesis.depot.general.admin.category.CategoryRepository;
-import com.bme.vik.aut.thesis.depot.general.admin.productschema.dto.CreateProductSchemaRequest;
-import com.bme.vik.aut.thesis.depot.general.supplier.product.*;
+import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchemaRepository;
+import com.bme.vik.aut.thesis.depot.general.supplier.product.Product;
+import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductRepository;
+import com.bme.vik.aut.thesis.depot.general.supplier.product.ProductStatus;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.Supplier;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.SupplierRepository;
 import com.bme.vik.aut.thesis.depot.general.user.UserRepository;
-import com.bme.vik.aut.thesis.depot.general.user.dto.UserModifyRequest;
-import com.bme.vik.aut.thesis.depot.general.user.dto.UserResponse;
 import com.bme.vik.aut.thesis.depot.general.util.TestUtil;
-import com.bme.vik.aut.thesis.depot.security.user.MyUser;
-import com.bme.vik.aut.thesis.depot.security.user.Role;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-
-import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryService;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.test.util.ReflectionTestUtils;
-
-import static org.junit.jupiter.api.Assertions.*;
-import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchema;
-import com.bme.vik.aut.thesis.depot.general.supplier.product.Product;
-import com.bme.vik.aut.thesis.depot.general.supplier.supplier.Supplier;
-import com.bme.vik.aut.thesis.depot.security.user.MyUser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -68,10 +19,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)

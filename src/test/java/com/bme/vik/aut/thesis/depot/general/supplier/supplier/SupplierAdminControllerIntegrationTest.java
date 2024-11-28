@@ -1,48 +1,26 @@
 package com.bme.vik.aut.thesis.depot.general.supplier.supplier;
 
-import com.bme.vik.aut.thesis.depot.general.order.OrderRepository;
-import com.bme.vik.aut.thesis.depot.general.supplier.inventory.Inventory;
-import com.bme.vik.aut.thesis.depot.general.supplier.product.dto.CreateProductStockRequest;
-import com.bme.vik.aut.thesis.depot.general.supplier.supplier.Supplier;
-import com.bme.vik.aut.thesis.depot.general.supplier.supplier.SupplierService;
+import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryService;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.dto.CreateSupplierRequest;
 import com.bme.vik.aut.thesis.depot.general.supplier.supplier.dto.SupplierCreationResponse;
-import com.bme.vik.aut.thesis.depot.general.util.*;
-import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchemaRepository;
-import com.bme.vik.aut.thesis.depot.general.order.Order;
-import com.bme.vik.aut.thesis.depot.general.supplier.product.*;
-import com.bme.vik.aut.thesis.depot.general.supplier.supplier.SupplierRepository;
 import com.bme.vik.aut.thesis.depot.general.user.UserRepository;
+import com.bme.vik.aut.thesis.depot.general.util.TestUtil;
 import com.bme.vik.aut.thesis.depot.security.auth.AuthService;
-import com.bme.vik.aut.thesis.depot.security.jwt.JwtTokenService;
-import com.bme.vik.aut.thesis.depot.general.admin.productschema.ProductSchema;
-import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryRepository;
-import com.bme.vik.aut.thesis.depot.general.admin.category.Category;
-import com.bme.vik.aut.thesis.depot.general.admin.category.CategoryRepository;
 import com.bme.vik.aut.thesis.depot.security.user.Role;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.time.LocalDateTime;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-
-import com.bme.vik.aut.thesis.depot.general.supplier.inventory.InventoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.transaction.annotation.Transactional;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -56,9 +34,6 @@ class SupplierAdminControllerIntegrationTest {
 
     @Autowired
     private SupplierRepository supplierRepository;
-
-    @Autowired
-    private InventoryRepository inventoryRepository;
 
     @Autowired
     private UserRepository userRepository;

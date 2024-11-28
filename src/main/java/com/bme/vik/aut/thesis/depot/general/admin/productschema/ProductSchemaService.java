@@ -1,7 +1,6 @@
 package com.bme.vik.aut.thesis.depot.general.admin.productschema;
 
 import com.bme.vik.aut.thesis.depot.exception.category.CategoryNotFoundException;
-import com.bme.vik.aut.thesis.depot.exception.productschema.NonGreaterThanZeroStorageSpaceException;
 import com.bme.vik.aut.thesis.depot.exception.productschema.ProductSchemaAlreadyExistsException;
 import com.bme.vik.aut.thesis.depot.exception.productschema.ProductSchemaNotFoundException;
 import com.bme.vik.aut.thesis.depot.general.admin.category.Category;

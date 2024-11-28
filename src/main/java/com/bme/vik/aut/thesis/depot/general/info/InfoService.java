@@ -68,7 +68,7 @@ public class InfoService {
         List<Product> products = productRepository.findAll().stream()
                 .filter(product -> product.getSchema().getCategories().stream()
                         .anyMatch(category -> category.getId().equals(categoryId)))
-                .collect(Collectors.toList());
+                .toList();
 
         if (products.isEmpty()) {
             throw new CategoryNotFoundException("No products found for category ID: " + categoryId);
