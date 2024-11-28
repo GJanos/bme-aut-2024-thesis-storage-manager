@@ -77,10 +77,16 @@ jobs:
         run: |
           docker-compose up -d
 
-      - name: Verify Application Health
+      - name: Wait for the app to be ready
         run: |
-          sleep 30
-          curl -f http://127.0.0.1:8080/actuator/health || exit 1
+          sleep 20
+          
+          # Find the container ID of the app container
+          APP_CONTAINER_ID=$(docker ps -qf "name=bme-aut-2024-thesis-storage-manager-app-1")
+          
+          # Check the health endpoint inside the container using docker exec
+          docker exec $APP_CONTAINER_ID curl -f http://localhost:8080/actuator/health || exit 1
+      
 
       - name: Stop Docker Compose
         if: always()
