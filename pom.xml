@@ -34,7 +34,7 @@
         <modelmapper.version>3.2.0</modelmapper.version>
         <postgresql.version>42.6.2</postgresql.version>
         <lombok.version>1.18.30</lombok.version>
-        <spring.security.test.version>6.3.0</spring.security.test.version> <!-- Spring Security Test Version -->
+        <spring.security.test.version>6.3.0</spring.security.test.version>
         <openapi.version>2.6.0</openapi.version>
         <spring.boot.starter.webflux.version>3.3.4</spring.boot.starter.webflux.version>
         <h2db.version>2.3.230</h2db.version>
